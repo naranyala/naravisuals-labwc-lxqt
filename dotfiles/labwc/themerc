@@ -1,0 +1,75 @@
+# labwc theme override
+# Syntax: <key>: <value>
+# Overrides values from the theme specified in rc.xml <theme><name>
+
+# Window border width and titlebar height
+window.border.width: 2
+window.border.color: #2e3440
+window.active.border.color: #81a1c1
+padding.height: 4
+
+# Title bar appearance
+window.active.title.bg: #3b4252
+window.active.title.fg: #eceff4
+window.active.title.bg.color: #3b4252
+window.active.label.fg: #eceff4
+window.active.label.text: #eceff4
+window.active.label.bg: #3b4252
+window.active.label.bg.color: #3b4252
+
+# Inactive window
+window.inactive.title.bg: #2e3440
+window.inactive.title.fg: #4c566a
+window.inactive.title.bg.color: #2e3440
+window.inactive.label.fg: #4c566a
+window.inactive.label.text: #4c566a
+window.inactive.label.bg: #2e3440
+window.inactive.label.bg.color: #2e3440
+
+# Handles
+window.active.handle.bg: #3b4252
+window.active.handle.bg.color: #3b4252
+window.inactive.handle.bg: #2e3440
+window.inactive.handle.bg.color: #2e3440
+
+# Menu appearance
+menu.items.bg: #2e3440
+menu.items.fg: #d8dee9
+menu.items.bg.color: #2e3440
+menu.title.bg: #3b4252
+menu.title.fg: #eceff4
+menu.title.bg.color: #3b4252
+menu.items.active.bg: #81a1c1
+menu.items.active.fg: #2e3440
+menu.items.active.bg.color: #81a1c1
+menu.separator.color: #4c566a
+menu.separator.width: 1
+menu.overlap.x: 0
+menu.overlap.y: -4
+
+# On-screen display
+osd.bg: #2e3440
+osd.fg: #d8dee9
+osd.bg.color: #2e3440
+osd.border.color: #81a1c1
+osd.border.width: 1
+osd.label.fg: #d8dee9
+osd.label.bg: #2e3440
+osd.label.bg.color: #2e3440
+osd.window-switcher.width: 600
+osd.window-switcher.height: 400
+osd.window-switcher.padding: 8
+
+# Button appearance
+window.active.button.bg: #3b4252
+window.active.button.fg: #d8dee9
+window.active.button.bg.color: #3b4252
+window.active.button.iconify.bg: #3b4252
+window.active.button.iconify.fg: #ebcb8b
+window.active.button.maximize.bg: #3b4252
+window.active.button.maximize.fg: #a3be8c
+window.active.button.close.bg: #3b4252
+window.active.button.close.fg: #bf616a
+window.inactive.button.bg: #2e3440
+window.inactive.button.fg: #4c566a
+window.inactive.button.bg.color: #2e3440

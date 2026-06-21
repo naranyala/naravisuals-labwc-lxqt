@@ -1,0 +1,17 @@
+color=1e1e1e
+indicator-idle-visible
+indicator-radius=100
+indicator-thickness=10
+ring-color=3b4252
+ring-clear-color=81a1c1
+ring-caps-lock-color=ebcb8b
+ring-ver-color=a3be8c
+ring-wrong-color=bf616a
+key-hl-color=81a1c1
+line-color=00000000
+inside-color=2e3440
+inside-clear-color=81a1c1
+inside-caps-lock-color=ebcb8b
+inside-ver-color=a3be8c
+inside-wrong-color=bf616a
+text-color=eceff4

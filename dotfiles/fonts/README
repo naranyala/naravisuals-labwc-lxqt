@@ -1,0 +1,12 @@
+Place custom fonts in this directory.
+
+The dotfiles configuration assumes Noto Sans and Noto Sans Mono are installed.
+Install them via:
+
+  Debian/Ubuntu: sudo apt install fonts-noto fonts-noto-mono
+  Arch: sudo pacman -S noto-fonts noto-fonts-emoji
+  Fedora: sudo dnf install google-noto-sans-fonts google-noto-sans-mono-fonts
+
+To add custom fonts:
+  1. Copy .ttf or .otf files here
+  2. Run: mkdir -p ~/.local/share/fonts && cp * ~/.local/share/fonts/ && fc-cache -fv

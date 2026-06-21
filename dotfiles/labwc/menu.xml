@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu>
+  <menu id="root-menu" label="LXQt">
+    <item label="Terminal" icon="utilities-terminal">
+      <action name="Execute" command="qterminal" />
+    </item>
+    <item label="Emacs" icon="accessories-text-editor">
+      <action name="Execute" command="emacs" />
+    </item>
+    <item label="File Manager" icon="system-file-manager">
+      <action name="Execute" command="pcmanfm-qt" />
+    </item>
+    <separator />
+    <menu id="lxqt-settings" label="LXQt Settings" icon="preferences-system">
+      <item label="Appearance" icon="preferences-desktop-theme">
+        <action name="Execute" command="lxqt-config-appearance" />
+      </item>
+      <item label="Session Settings" icon="preferences-system-session">
+        <action name="Execute" command="lxqt-config-session" />
+      </item>
+      <item label="Panel Configuration" icon="preferences-desktop-panel">
+        <action name="Execute" command="lxqt-config-panel" />
+      </item>
+      <item label="Monitor Settings" icon="preferences-desktop-display">
+        <action name="Execute" command="lxqt-config-monitor" />
+      </item>
+      <item label="Input Devices" icon="preferences-desktop-peripherals">
+        <action name="Execute" command="lxqt-config-input" />
+      </item>
+      <item label="Keyboard &amp; Mouse" icon="input-keyboard">
+        <action name="Execute" command="lxqt-config-input" />
+      </item>
+      <item label="Locale" icon="preferences-desktop-locale">
+        <action name="Execute" command="lxqt-config-locale" />
+      </item>
+      <item label="File Associations" icon="preferences-desktop-filetype-association">
+        <action name="Execute" command="lxqt-config-file-associations" />
+      </item>
+    </menu>
+    <menu id="system-tools" label="System Tools" icon="applications-system">
+      <item label="Task Manager" icon="utilities-system-monitor">
+        <action name="Execute" command="qps" />
+      </item>
+      <item label="PulseAudio Volume" icon="audio-volume-high">
+        <action name="Execute" command="pavucontrol" />
+      </item>
+      <item label="Disk Utility" icon="drive-harddisk">
+        <action name="Execute" command="gnome-disk-utility" />
+      </item>
+      <item label="Software Center" icon="applications-other">
+        <action name="Execute" command="discover" />
+      </item>
+    </menu>
+    <separator />
+    <item label="Labwc Tweaks" icon="preferences-other">
+      <action name="Execute" command="labwc-tweaks" />
+    </item>
+    <item label="Reconfigure Labwc" icon="view-refresh">
+      <action name="Reconfigure" />
+    </item>
+    <separator />
+    <item label="Lock Screen" icon="system-lock-screen">
+      <action name="Execute" command="swaylock -f -c 1e1e1e" />
+    </item>
+    <item label="Logout" icon="system-log-out">
+      <action name="Execute" command="lxqt-leave" />
+    </item>
+  </menu>
+
+  <menu id="client-menu" label="Window">
+    <item label="Minimize" icon="window-minimize">
+      <action name="Iconify" />
+    </item>
+    <item label="Maximize" icon="window-maximize">
+      <action name="ToggleMaximize" />
+    </item>
+    <item label="Fullscreen" icon="view-fullscreen">
+      <action name="ToggleFullscreen" />
+    </item>
+    <item label="Roll Up/Down" icon="window-shade">
+      <action name="ToggleShade" />
+    </item>
+    <separator />
+    <item label="Decorations" icon="format-stroke-color">
+      <action name="ToggleDecorations" />
+    </item>
+    <item label="Always on Top" icon="go-top">
+      <action name="ToggleAlwaysOnTop" />
+    </item>
+    <item label="Always on Visible Workspace" icon="workspace-switcher">
+      <action name="ToggleOmnipresent" />
+    </item>
+    <separator />
+    <menu id="workspace-menu" label="Move to Workspace" icon="workspace-switcher">
+      <item label="Workspace 1">
+        <action name="SendToDesktop" to="1" />
+        <action name="GoToDesktop" to="1" />
+      </item>
+      <item label="Workspace 2">
+        <action name="SendToDesktop" to="2" />
+        <action name="GoToDesktop" to="2" />
+      </item>
+      <item label="Workspace 3">
+        <action name="SendToDesktop" to="3" />
+        <action name="GoToDesktop" to="3" />
+      </item>
+      <item label="Workspace 4">
+        <action name="SendToDesktop" to="4" />
+        <action name="GoToDesktop" to="4" />
+      </item>
+    </menu>
+    <separator />
+    <item label="Close" icon="window-close">
+      <action name="Close" />
+    </item>
+  </menu>
+</openbox_menu>

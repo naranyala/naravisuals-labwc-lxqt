@@ -1,0 +1,62 @@
+# LXQt Labwc Session - Environment
+# =================================
+# This file will be sourced/sourced-like by labwc at startup.
+# It is also managed by lxqt2labwcexporter to sync LXQt settings.
+
+# Keyboard layout
+# Set by LXQt session exporter - do not edit here if using lxqt2labwcexporter
+XKB_DEFAULT_LAYOUT=us
+# XKB options: layout toggle with Alt+Shift, compose key on Right Alt
+XKB_DEFAULT_OPTIONS=grp:alt_shift_toggle,compose:ralt
+
+# Mouse cursor
+# Set by LXQt session exporter
+XCURSOR_THEME=breeze_cursors
+XCURSOR_SIZE=24
+
+# Qt platform theme - use qt6ct for consistent look with LXQt
+QT_QPA_PLATFORMTHEME=qt6ct
+
+# Wayland environment
+XDG_CURRENT_DESKTOP=LXQt:labwc:wlroots
+XDG_SESSION_DESKTOP=lxqt-labwc
+XDG_SESSION_TYPE=wayland
+
+# Disable CSD for Qt apps under Wayland (use labwc decorations)
+QT_WAYLAND_DISABLE_WINDOWDECORATION=1
+
+# Firefox Wayland support
+MOZ_ENABLE_WAYLAND=1
+MOZ_WEBRENDER=1
+
+# Java AWT non-reparenting (needed under Wayland)
+_JAVA_AWT_WM_NONREPARENTING=1
+
+# Electron Wayland support
+ELECTRON_ENABLE_WAYLAND=1
+ELECTRON_OZONE_PLATFORM_HINT=auto
+
+# GDK (GTK) backends
+GDK_BACKEND=wayland,x11
+
+# SDL backend
+SDL_VIDEO_DRIVER=wayland,x11
+
+# Clutter backend
+CLUTTER_BACKEND=wayland
+
+# No hardware cursors (set to 1 if running in a VM)
+WLR_NO_HARDWARE_CURSORS=0
+
+# LibSEAT backend
+SEAT_BACKEND=builtin
+
+# XWayland disable (set to 1 of you want pure Wayland)
+# DISABLE_XWAYLAND=0
+
+# PipeWire/WirePlumber (uncomment if not auto-started)
+# PIPEWIRE_CONFIG_DIR=/etc/pipewire
+# WIREPLUMBER_CONFIG_DIR=/etc/wireplumber
+
+# GTK file chooser portal
+GTK_USE_PORTAL=1

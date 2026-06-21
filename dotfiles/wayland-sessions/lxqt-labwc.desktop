@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (Labwc)
+Comment=LXQt Session using labwc compositor
+Exec=labwc -s lxqt-session
+Type=Application
+DesktopNames=LXQt;labwc;wlroots

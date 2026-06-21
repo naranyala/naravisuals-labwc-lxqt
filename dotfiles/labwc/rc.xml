@@ -1,0 +1,418 @@
+<labwc_config>
+  <core>
+    <gap>8</gap>
+    <adaptiveSync>false</adaptiveSync>
+    <allowSessionManagement>true</allowSessionManagement>
+    <decorate>all</decorate>
+    <edgeResistance>20</edgeResistance>
+    <edgeImmersion>window</edgeImmersion>
+    <focusNewWindows>true</focusNewWindows>
+    <focusMode>sloppy</focusMode>
+    <maxOverlookZone>20</maxOverlookZone>
+    <raiseOnFocus>true</raiseOnFocus>
+    <reloadConfigBg>true</reloadConfigBg>
+    <resizeBusyFeedback>true</resizeBusyFeedback>
+    <saveCycles>false</saveCycles>
+    <screenEdgeStrength>20</screenEdgeStrength>
+    <showTooltips>yes</showTooltips>
+    <shadeInactive>false</shadeInactive>
+    <soundOnClose>false</soundOnClose>
+    <xwaylandScale>1</xwaylandScale>
+    <layoutPolicy>automatic</layoutPolicy>
+    <placementPolicy>automatic</placementPolicy>
+  </core>
+
+  <desktops>
+    <number>4</number>
+    <popupTime>2</popupTime>
+    <names>
+      <name>One</name>
+      <name>Two</name>
+      <name>Three</name>
+      <name>Four</name>
+    </names>
+  </desktops>
+
+  <resistance>
+    <screenEdgeStrength>20</screenEdgeStrength>
+    <windowEdgeStrength>20</windowEdgeStrength>
+  </resistance>
+
+  <theme>
+    <name>Vent-dark</name>
+    <cornerRadius>10</cornerRadius>
+    <dropdownLayer>below</dropdownLayer>
+    <font place="ActiveWindow">Noto Sans Bold,10</font>
+    <font place="InactiveWindow">Noto Sans,10</font>
+    <font place="MenuItem">Noto Sans,10</font>
+    <font place="OnScreenDisplay">Noto Sans,12</font>
+    <font place="WindowTitle">Noto Sans Bold,10</font>
+    <menuMaxWidth>400</menuMaxWidth>
+    <menuMinWidth>200</menuMinWidth>
+    <menuOverlapX>0</menuOverlapX>
+    <menuOverlapY>-10</menuOverlapY>
+    <titlebarLayout>icon:iconify:maximise:close</titlebarLayout>
+  </theme>
+
+  <windowPlacement>
+    <policy>automatic</policy>
+    <center>false</center>
+    <monitor>any</monitor>
+  </windowPlacement>
+
+  <windowSwitcher>
+    <allWorkspaces>false</allWorkspaces>
+    <fields>
+      <field content="type" />
+      <field content="identifier" />
+      <field content="title" />
+    </fields>
+    <show>true</show>
+    <outlines>false</outlines>
+    <preview>true</preview>
+  </windowSwitcher>
+
+  <windowRules>
+    <windowRule identifier="*">
+      <skipTaskbar>no</skipTaskbar>
+      <skipWindowSwitcher>no</skipWindowSwitcher>
+      <decorate>yes</decorate>
+    </windowRule>
+    <windowRule identifier="lxqt-panel">
+      <skipTaskbar>yes</skipTaskbar>
+      <skipWindowSwitcher>yes</skipWindowSwitcher>
+      <decorate>no</decorate>
+      <type>desktop</type>
+    </windowRule>
+    <windowRule identifier="pcmanfm-qt">
+      <skipTaskbar>no</skipTaskbar>
+      <skipWindowSwitcher>no</skipWindowSwitcher>
+      <decorate>yes</decorate>
+    </windowRule>
+    <windowRule identifier="qterminal" title="QTerminal*">
+      <skipTaskbar>no</skipTaskbar>
+      <skipWindowSwitcher>no</skipWindowSwitcher>
+    </windowRule>
+    <windowRule identifier="qterminal" title="dropdown">
+      <skipTaskbar>yes</skipTaskbar>
+      <skipWindowSwitcher>yes</skipWindowSwitcher>
+      <decorate>no</decorate>
+      <type>desktop</type>
+    </windowRule>
+  </windowRules>
+
+  <keyboard>
+    <default />
+    <keybind key="W-Return">
+      <action name="Execute" command="qterminal" />
+    </keybind>
+    <keybind key="W-S-Return">
+      <action name="Execute" command="qterminal --drop-down" />
+    </keybind>
+    <keybind key="A-F2">
+      <action name="Execute" command="lxqt-runner" />
+    </keybind>
+    <keybind key="A-Space">
+      <action name="Execute" command="lxqt-runner" />
+    </keybind>
+    <keybind key="W-d">
+      <action name="ToggleShowDesktop" />
+    </keybind>
+    <keybind key="W-e">
+      <action name="Execute" command="pcmanfm-qt" />
+    </keybind>
+    <keybind key="W-q">
+      <action name="Close" />
+    </keybind>
+    <keybind key="W-m">
+      <action name="ToggleMaximize" />
+    </keybind>
+    <keybind key="W-x">
+      <action name="ToggleDecorations" />
+    </keybind>
+    <keybind key="W-f">
+      <action name="ToggleFullscreen" />
+    </keybind>
+    <keybind key="W-v">
+      <action name="Execute" command="pavucontrol" />
+    </keybind>
+    <keybind key="W-l">
+      <action name="Execute" command="lxqt-leave" />
+    </keybind>
+    <keybind key="W-S-e">
+      <action name="Execute" command="lxqt-config-appearance" />
+    </keybind>
+    <keybind key="W-S-x">
+      <action name="Execute" command="lxqt-config-session" />
+    </keybind>
+    <keybind key="C-A-t">
+      <action name="Execute" command="lxqt-terminal" />
+    </keybind>
+    <keybind key="C-A-e">
+      <action name="Execute" command="emacs" />
+    </keybind>
+    <keybind key="W-S-R">
+      <action name="Reconfigure" />
+    </keybind>
+    <keybind key="W-Left">
+      <action name="SnapToEdge" direction="left" />
+    </keybind>
+    <keybind key="W-Right">
+      <action name="SnapToEdge" direction="right" />
+    </keybind>
+    <keybind key="W-Up">
+      <action name="SnapToEdge" direction="up" />
+    </keybind>
+    <keybind key="W-Down">
+      <action name="SnapToEdge" direction="down" />
+    </keybind>
+    <keybind key="W-1">
+      <action name="GoToDesktop" to="1" />
+    </keybind>
+    <keybind key="W-2">
+      <action name="GoToDesktop" to="2" />
+    </keybind>
+    <keybind key="W-3">
+      <action name="GoToDesktop" to="3" />
+    </keybind>
+    <keybind key="W-4">
+      <action name="GoToDesktop" to="4" />
+    </keybind>
+    <keybind key="W-S-Left">
+      <action name="SendToDesktop" to="left" />
+      <action name="GoToDesktop" to="left" />
+    </keybind>
+    <keybind key="W-S-Right">
+      <action name="SendToDesktop" to="right" />
+      <action name="GoToDesktop" to="right" />
+    </keybind>
+    <keybind key="W-S-1">
+      <action name="SendToDesktop" to="1" />
+      <action name="GoToDesktop" to="1" />
+    </keybind>
+    <keybind key="W-S-2">
+      <action name="SendToDesktop" to="2" />
+      <action name="GoToDesktop" to="2" />
+    </keybind>
+    <keybind key="W-S-3">
+      <action name="SendToDesktop" to="3" />
+      <action name="GoToDesktop" to="3" />
+    </keybind>
+    <keybind key="W-S-4">
+      <action name="SendToDesktop" to="4" />
+      <action name="GoToDesktop" to="4" />
+    </keybind>
+    <keybind key="C-W-Left">
+      <action name="SnapToRegion" region="left" />
+    </keybind>
+    <keybind key="W-Right">
+      <action name="SnapToRegion" region="right" />
+    </keybind>
+    <keybind key="C-W-Up">
+      <action name="SnapToRegion" region="top" />
+    </keybind>
+    <keybind key="C-W-Down">
+      <action name="SnapToRegion" region="bottom" />
+    </keybind>
+    <keybind key="W-Tab">
+      <action name="NextWindow" />
+    </keybind>
+    <keybind key="W-S-Tab">
+      <action name="PreviousWindow" />
+    </keybind>
+    <keybind key="W-A-Left">
+      <action name="MoveToEdge" direction="left" />
+    </keybind>
+    <keybind key="W-A-Right">
+      <action name="MoveToEdge" direction="right" />
+    </keybind>
+    <keybind key="W-A-Up">
+      <action name="MoveToEdge" direction="up" />
+    </keybind>
+    <keybind key="W-A-Down">
+      <action name="MoveToEdge" direction="down" />
+    </keybind>
+    <keybind key="Print">
+      <action name="Execute" command="grimshot copy screen" />
+    </keybind>
+    <keybind key="S-Print">
+      <action name="Execute" command="grimshot copy area" />
+    </keybind>
+    <keybind key="C-Print">
+      <action name="Execute" command="grimshot save screen ~/Pictures/Screenshots/$(date +%Y%m%d-%H%M%S).png" />
+    </keybind>
+    <keybind key="XF86AudioRaiseVolume">
+      <action name="Execute" command="pactl set-sink-volume @DEFAULT_SINK@ +5%" />
+    </keybind>
+    <keybind key="XF86AudioLowerVolume">
+      <action name="Execute" command="pactl set-sink-volume @DEFAULT_SINK@ -5%" />
+    </keybind>
+    <keybind key="XF86AudioMute">
+      <action name="Execute" command="pactl set-sink-mute @DEFAULT_SINK@ toggle" />
+    </keybind>
+    <keybind key="XF86AudioPlay">
+      <action name="Execute" command="playerctl play-pause" />
+    </keybind>
+    <keybind key="XF86AudioNext">
+      <action name="Execute" command="playerctl next" />
+    </keybind>
+    <keybind key="XF86AudioPrev">
+      <action name="Execute" command="playerctl previous" />
+    </keybind>
+    <keybind key="XF86MonBrightnessUp">
+      <action name="Execute" command="brightnessctl set +5%" />
+    </keybind>
+    <keybind key="XF86MonBrightnessDown">
+      <action name="Execute" command="brightnessctl set 5%-" />
+    </keybind>
+    <keybind key="W-F12">
+      <action name="Execute" command="swaylock -f -c 1e1e1e" />
+    </keybind>
+  </keyboard>
+
+  <mouse>
+    <default />
+    <context name="Root">
+      <mousebind button="Left" action="Press">
+        <action name="ShowMenu" menu="root-menu" />
+      </mousebind>
+      <mousebind button="Right" action="Press">
+        <action name="ShowMenu" menu="root-menu" />
+      </mousebind>
+      <mousebind button="Middle" action="Press">
+        <action name="ShowMenu" menu="root-menu" />
+      </mousebind>
+    </context>
+    <context name="Client">
+      <mousebind button="Left" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+      <mousebind button="Left" action="DoubleClick">
+        <action name="ToggleMaximize" />
+      </mousebind>
+      <mousebind button="Left" action="Drag">
+        <action name="Move" />
+      </mousebind>
+      <mousebind button="Right" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+      <mousebind button="Middle" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+    </context>
+    <context name="TitleBar">
+      <mousebind button="Left" action="Press">
+        <action name="Focus" />
+        <action name="Raise" />
+      </mousebind>
+      <mousebind button="Left" action="Drag">
+        <action name="Move" />
+      </mousebind>
+      <mousebind button="Left" action="DoubleClick">
+        <action name="Shade" />
+      </mousebind>
+      <mousebind button="Right" action="Press">
+        <action name="ShowMenu" menu="client-menu" />
+      </mousebind>
+    </context>
+    <context name="Top">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="Bottom">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="Left">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="Right">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="TopLeft">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="TopRight">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="BottomLeft">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="BottomRight">
+      <mousebind button="Left" action="Drag">
+        <action name="Resize" />
+      </mousebind>
+    </context>
+    <context name="Icon">
+      <mousebind button="Left" action="Press">
+        <action name="ShowMenu" menu="client-menu" />
+      </mousebind>
+    </context>
+    <context name="AllDesktops">
+      <mousebind button="Left" action="Drag">
+        <action name="Move" />
+      </mousebind>
+    </context>
+    <context name="Desktop">
+      <mousebind button="Right" action="Press">
+        <action name="ShowMenu" menu="root-menu" />
+      </mousebind>
+    </context>
+  </mouse>
+
+  <libinput>
+    <device category="default">
+      <naturalScroll>false</naturalScroll>
+      <pointerSpeed>0.5</pointerSpeed>
+      <accelProfile>adaptive</accelProfile>
+      <tap>true</tap>
+      <tapButtonMap>lrm</tapButtonMap>
+      <middleEmulation>false</middleEmulation>
+      <disableWhileTyping>true</disableWhileTyping>
+      <leftHanded>false</leftHanded>
+      <dwt>true</dwt>
+      <dwtp>true</dwtp>
+      <scrollMethod>two-finger</scrollMethod>
+      <clickMethod>clickfinger</clickMethod>
+      <sendEventsMode>enabled</sendEventsMode>
+    </device>
+  </libinput>
+
+  <touch>
+    <mapToOutput>current</mapToOutput>
+    <gestureSwipeThreshold>100</gestureSwipeThreshold>
+    <gestureSwipeFingerMin>3</gestureSwipeFingerMin>
+  </touch>
+
+  <workspaceLayout>
+    <layout>vertical</layout>
+    <direction>left-to-right</direction>
+  </workspaceLayout>
+
+  <margin>
+    <monitor>1</monitor>
+    <top>0</top>
+    <bottom>0</bottom>
+    <left>0</left>
+    <right>0</right>
+  </margin>
+
+  <eventTrigger>
+    <interval>150</interval>
+    <maxTime>300</maxTime>
+  </eventTrigger>
+</labwc_config>

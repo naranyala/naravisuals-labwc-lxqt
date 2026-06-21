@@ -1,0 +1,35 @@
+#!/bin/sh
+
+# LXQt Labwc Session - Shutdown
+# ==============================
+# This script runs when labwc exits.
+
+# Kill swaybg
+pkill swaybg 2>/dev/null || true
+
+# Kill notification daemon
+pkill dunst 2>/dev/null || true
+
+# Kill panel
+pkill lxqt-panel 2>/dev/null || true
+
+# Kill policy kit agent
+pkill lxqt-policykit-agent 2>/dev/null || true
+
+# Kill network applet
+pkill nm-applet 2>/dev/null || true
+
+# Kill bluetooth applet
+pkill blueman-applet 2>/dev/null || true
+
+# Kill idle daemon
+pkill swayidle 2>/dev/null || true
+
+# Kill clipboard manager
+pkill copyq 2>/dev/null || true
+pkill cliphist 2>/dev/null || true
+
+# Reset cursor visibility
+if command -v wlr-randr &>/dev/null; then
+  wlr-randr --force-compositor-mode off 2>/dev/null || true
+fi
