@@ -170,12 +170,16 @@ print_banner
 require_cmds curl tar unzip find || log_warn "Some tools missing; modules may fail"
 
 # Determine what to run
-if [ "$RUN_ALL" = true ] || [ ${#SELECTED[@]} -eq 0 ]; then
+set +u
+sel_count=${#SELECTED[@]}
+set -u
+
+if [ "$RUN_ALL" = true ] || [ "$sel_count" -eq 0 ]; then
   # Either --all was passed, or no specific modules selected
   RUN_ALL=true
 fi
 
-if [ "$RUN_ALL" != true ] && [ ${#SELECTED[@]} -eq 0 ]; then
+if [ "$RUN_ALL" != true ] && [ "$sel_count" -eq 0 ]; then
   # No selection made, show menu
   show_menu
 fi
