@@ -246,6 +246,98 @@ detect_pm() {
   fi
 }
 
+# Detect distro family (debian, fedora, rhel, suse, arch, unknown)
+detect_distro() {
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    case "$ID" in
+      ubuntu|debian|linuxmint|pop|elementary|zorin|kali|raspbian|devuan|deepin)
+        echo "debian" ;;
+      fedora)
+        echo "fedora" ;;
+      rhel|centos|rocky|alma|ol|scientific)
+        echo "rhel" ;;
+      opensuse*|sles)
+        echo "suse" ;;
+      arch|manjaro|endeavouros|garuda|artix)
+        echo "arch" ;;
+      void)
+        echo "void" ;;
+      alpine)
+        echo "alpine" ;;
+      *)
+        echo "unknown" ;;
+    esac
+  elif cmd_exists "apt"; then
+    echo "debian"
+  elif cmd_exists "dnf"; then
+    if [ -f /etc/redhat-release ]; then
+      grep -qi "fedora" /etc/redhat-release 2>/dev/null && echo "fedora" || echo "rhel"
+    else
+      echo "rhel"
+    fi
+  else
+    echo "unknown"
+  fi
+}
+
+# Get distro version (e.g. "41", "9.3", "22.04")
+detect_distro_version() {
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    echo "${VERSION_ID:-unknown}"
+  else
+    echo "unknown"
+  fi
+}
+
+# Check if a package is installed (cross-distro)
+is_installed() {
+  local pkg="$1"
+  case "$(detect_pm)" in
+    apt)     dpkg -s "$pkg" &>/dev/null ;;
+    dnf)     rpm -q "$pkg" &>/dev/null ;;
+    pacman)  pacman -Qi "$pkg" &>/dev/null ;;
+    zypper)  rpm -q "$pkg" &>/dev/null ;;
+    *)       false ;;
+  esac
+}
+
+# Check if a package is available in repos (without installing)
+pkg_available() {
+  local pkg="$1"
+  case "$(detect_pm)" in
+    apt)     apt-cache show "$pkg" &>/dev/null ;;
+    dnf)     dnf repoquery --available "$pkg" &>/dev/null ;;
+    pacman)  pacman -Si "$pkg" &>/dev/null ;;
+    zypper)  zypper search -x "$pkg" &>/dev/null ;;
+    *)       false ;;
+  esac
+}
+
+# Enable a Fedora Copr repo
+enable_copr() {
+  local repo="$1"
+  if [ "$(detect_distro)" != "fedora" ]; then
+    log_warn "Copr is Fedora-only, skipping: $repo"
+    return 0
+  fi
+  if ! cmd_exists "dnf"; then
+    log_error "dnf required for Copr"
+    return 1
+  fi
+  if dnf copr list --enabled 2>/dev/null | grep -q "$repo"; then
+    log_dim "  copr already enabled: $repo"
+    return 0
+  fi
+  log_dim "  enabling copr: $repo"
+  sudo dnf copr enable -y "$repo" 2>/dev/null || {
+    log_warn "Failed to enable Copr: $repo"
+    return 1
+  }
+  log_ok "Enabled Copr: $repo"
+}
+
 # Install system packages if missing
 pkg_install() {
   local pm
@@ -269,6 +361,28 @@ pkg_install() {
       return 1
       ;;
   esac
+}
+
+# Install package with name fallbacks for cross-distro compat
+# Usage: pkg_install_fallback "primary-name" "fallback1" "fallback2" ...
+pkg_install_fallback() {
+  local names=("$@")
+  local pm
+  pm="$(detect_pm)"
+
+  for name in "${names[@]}"; do
+    if pkg_available "$name"; then
+      log_dim "  installing: $name"
+      if pkg_install "$name"; then
+        log_ok "Installed: $name"
+        return 0
+      fi
+    fi
+  done
+
+  log_error "None of these packages found: ${names[*]}"
+  log_info "  Check your distro's repos or install manually."
+  return 1
 }
 
 # Print a summary of what this script did

@@ -36,7 +36,16 @@ std::vector<Dotfile> manifest = {
     {"configs/dotfiles/kanshi/config", ".config/kanshi/config"},
     {"configs/dotfiles/swaylock/config", ".config/swaylock/config"},
     {"configs/dotfiles/dunst/dunstrc", ".config/dunst/dunstrc"},
-    {"configs/dotfiles/emacs/init.el", ".config/emacs/init.el"}
+    {"configs/dotfiles/emacs/init.el", ".config/emacs/init.el"},
+    {"configs/dotfiles/cliphist/config", ".config/cliphist/config"},
+    {"configs/dotfiles/wob/config", ".config/wob/config"},
+    {"configs/dotfiles/rofi/config.rasi", ".config/rofi/config.rasi"},
+    {"configs/dotfiles/xdg-desktop-portal-wlr/config", ".config/xdg-desktop-portal-wlr/config"},
+    {"configs/dotfiles/lxqt/lxqt-panel.qss", ".config/lxqt/lxqt-panel.qss"},
+    {"configs/dotfiles/lxqt/panel-stock.conf", ".config/lxqt/panel-stock.conf"},
+    {"configs/compositors/hyprland/hyprland.conf", ".config/hypr/hyprland.conf"},
+    {"configs/compositors/sway/config", ".config/sway/config"},
+    {"configs/compositors/wayfire/wayfire.ini", ".config/wayfire/wayfire.ini"}
 };
 
 std::string getHomeDir() {

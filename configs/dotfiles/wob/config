@@ -1,0 +1,17 @@
+# wob — Wayland Overlay Bar
+# Displays volume/brightness progress as a bar overlay
+
+# Dimensions
+width=600
+height=30
+margin=20
+
+# Appearance
+border_width=2
+border_color=81a1c1FF
+background_color=2e3440DD
+bar_color=81a1c1FF
+bar_padding=4
+
+# Behavior
+timeout=1000

@@ -129,6 +129,16 @@ public:
         gLayout->addWidget(labwcThemeBtn);
 
         layout->addWidget(group);
+
+        auto *panelGroup = new QGroupBox("Panel Management");
+        auto *pLayout = new QVBoxLayout(panelGroup);
+        pLayout->setSpacing(10);
+
+        auto *resetPanelBtn = new QPushButton("Reset Panel to Stock");
+        connect(resetPanelBtn, &QPushButton::clicked, [](){ runTerminalScript("reset-panel.sh"); });
+        pLayout->addWidget(resetPanelBtn);
+
+        layout->addWidget(panelGroup);
         layout->addStretch();
     }
 };
@@ -181,6 +191,23 @@ public:
 
         layout->addWidget(group);
 
+        auto *diskGroup = new QGroupBox("Disk Management");
+        auto *dLayout = new QVBoxLayout(diskGroup);
+        dLayout->setSpacing(10);
+
+        auto *ntfsBtn = new QPushButton("NTFS Partition Manager");
+        connect(ntfsBtn, &QPushButton::clicked, [](){
+            QString path = WORKSPACE_DIR + "/apps/ntfs-gui/build/naravisuals-ntfs-gui";
+            if (QFile::exists(path)) {
+                QProcess::startDetached(path);
+            } else {
+                QMessageBox::warning(nullptr, "Error", "NTFS GUI not built. Run: cd apps/ntfs-gui/build && ninja");
+            }
+        });
+        dLayout->addWidget(ntfsBtn);
+
+        layout->addWidget(diskGroup);
+
         auto *updateGroup = new QGroupBox("System Maintenance");
         auto *uLayout = new QVBoxLayout(updateGroup);
         auto *updatePanelBtn = new QPushButton("Update LXQt Panel from Source");
@@ -213,6 +240,122 @@ public:
     }
 };
 
+class CompositorPage : public QWidget {
+public:
+    CompositorPage(QWidget *parent = nullptr) : QWidget(parent) {
+        auto *layout = new QVBoxLayout(this);
+
+        auto *group = new QGroupBox("Wayland Compositors");
+        auto *gLayout = new QVBoxLayout(group);
+        gLayout->setSpacing(10);
+
+        auto *hyprlandBtn = new QPushButton("Install Hyprland");
+        connect(hyprlandBtn, &QPushButton::clicked, [](){ runTerminalScript("features/install-compositor.sh hyprland"); });
+        gLayout->addWidget(hyprlandBtn);
+
+        auto *swayBtn = new QPushButton("Install Sway");
+        connect(swayBtn, &QPushButton::clicked, [](){ runTerminalScript("features/install-compositor.sh sway"); });
+        gLayout->addWidget(swayBtn);
+
+        auto *wayfireBtn = new QPushButton("Install Wayfire");
+        connect(wayfireBtn, &QPushButton::clicked, [](){ runTerminalScript("features/install-compositor.sh wayfire"); });
+        gLayout->addWidget(wayfireBtn);
+
+        layout->addWidget(group);
+
+        auto *switchGroup = new QGroupBox("Switch Active Compositor");
+        auto *sLayout = new QVBoxLayout(switchGroup);
+        sLayout->setSpacing(10);
+
+        auto *switchBtn = new QPushButton("Switch Compositor");
+        connect(switchBtn, &QPushButton::clicked, [](){ runTerminalScript("switch-lxqt-compositor.sh"); });
+        sLayout->addWidget(switchBtn);
+
+        layout->addWidget(switchGroup);
+        layout->addStretch();
+    }
+};
+
+class ThemingPage : public QWidget {
+public:
+    ThemingPage(QWidget *parent = nullptr) : QWidget(parent) {
+        auto *layout = new QVBoxLayout(this);
+
+        auto *kvantumGroup = new QGroupBox("Kvantum Theme Engine");
+        auto *kLayout = new QVBoxLayout(kvantumGroup);
+        kLayout->setSpacing(10);
+
+        auto *kvantumBtn = new QPushButton("Install Kvantum + Qt6CT");
+        connect(kvantumBtn, &QPushButton::clicked, [](){ runTerminalScript("features/install-kvantum.sh"); });
+        kLayout->addWidget(kvantumBtn);
+
+        layout->addWidget(kvantumGroup);
+
+        auto *wallustGroup = new QGroupBox("Dynamic Theming (Wallust)");
+        auto *wLayout = new QVBoxLayout(wallustGroup);
+        wLayout->setSpacing(10);
+
+        auto *wallustBtn = new QPushButton("Install Wallust");
+        connect(wallustBtn, &QPushButton::clicked, [](){ runTerminalScript("features/wallust-setup.sh"); });
+        wLayout->addWidget(wallustBtn);
+
+        auto *applyBtn = new QPushButton("Apply Colors to Current Wallpaper");
+        connect(applyBtn, &QPushButton::clicked, [](){ runTerminalScript("features/wallust-setup.sh --apply"); });
+        wLayout->addWidget(applyBtn);
+
+        layout->addWidget(wallustGroup);
+
+        auto *panelGroup = new QGroupBox("Panel Styling");
+        auto *pLayout = new QVBoxLayout(panelGroup);
+        pLayout->setSpacing(10);
+
+        auto *resetPanelBtn = new QPushButton("Reset Panel to Stock");
+        connect(resetPanelBtn, &QPushButton::clicked, [](){ runTerminalScript("reset-panel.sh"); });
+        pLayout->addWidget(resetPanelBtn);
+
+        layout->addWidget(panelGroup);
+        layout->addStretch();
+    }
+};
+
+class SystemPage : public QWidget {
+public:
+    SystemPage(QWidget *parent = nullptr) : QWidget(parent) {
+        auto *layout = new QVBoxLayout(this);
+
+        auto *portalGroup = new QGroupBox("XDG Portals");
+        auto *ptLayout = new QVBoxLayout(portalGroup);
+        ptLayout->setSpacing(10);
+
+        auto *portalBtn = new QPushButton("Setup XDG Portals");
+        connect(portalBtn, &QPushButton::clicked, [](){ runTerminalScript("features/setup-portals.sh"); });
+        ptLayout->addWidget(portalBtn);
+
+        layout->addWidget(portalGroup);
+
+        auto *fedoraGroup = new QGroupBox("Fedora / RHEL Support");
+        auto *fLayout = new QVBoxLayout(fedoraGroup);
+        fLayout->setSpacing(10);
+
+        auto *fedoraBtn = new QPushButton("Setup Fedora Repos");
+        connect(fedoraBtn, &QPushButton::clicked, [](){ runTerminalScript("features/setup-fedora-repos.sh"); });
+        fLayout->addWidget(fedoraBtn);
+
+        layout->addWidget(fedoraGroup);
+
+        auto *maintenanceGroup = new QGroupBox("Maintenance");
+        auto *mLayout = new QVBoxLayout(maintenanceGroup);
+        mLayout->setSpacing(10);
+
+        auto *updatePanelBtn = new QPushButton("Update LXQt Panel from Source");
+        connect(updatePanelBtn, &QPushButton::clicked, [](){ runTerminalScript("update_lxqt_panel.sh"); });
+        mLayout->addWidget(updatePanelBtn);
+
+        layout->addWidget(maintenanceGroup);
+        layout->addStretch();
+    }
+};
+
 // --- Main Window ---
 
 class ControlCenterWindow : public QMainWindow {
@@ -230,11 +373,14 @@ public:
 
         sidebar = new QListWidget();
         sidebar->setFixedWidth(240);
-        sidebar->addItem("🎨 Appearance");
-        sidebar->addItem("🖥️ Desktop & WM");
-        sidebar->addItem("🖼️ Wallpapers");
-        sidebar->addItem("⚙️ Addons & Apps");
-        sidebar->addItem("🖱️ Input Devices");
+        sidebar->addItem("Appearance");
+        sidebar->addItem("Desktop & WM");
+        sidebar->addItem("Wallpapers");
+        sidebar->addItem("Addons & Apps");
+        sidebar->addItem("Input Devices");
+        sidebar->addItem("Compositors");
+        sidebar->addItem("Theming");
+        sidebar->addItem("System");
         
         sidebar->setStyleSheet(
             "QListWidget { background-color: #11111b; color: #a6adc8; border: none; font-size: 16px; }"
@@ -250,6 +396,9 @@ public:
         pages->addWidget(new WallpaperPage());
         pages->addWidget(new AddonsPage());
         pages->addWidget(new InputPage());
+        pages->addWidget(new CompositorPage());
+        pages->addWidget(new ThemingPage());
+        pages->addWidget(new SystemPage());
 
         mainLayout->addWidget(sidebar);
         mainLayout->addWidget(pages);

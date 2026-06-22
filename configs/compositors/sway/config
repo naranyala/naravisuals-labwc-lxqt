@@ -1,0 +1,136 @@
+# Sway Configuration for LXQt
+# Place at: ~/.config/sway/config
+
+# ---- Variables ----
+set $mod Super
+set $term qterminal
+set $menu rofi -show drun
+
+# ---- Font ----
+font pango:Noto Sans 10
+
+# ---- Input ----
+input type:touchpad {
+    tap enabled
+    natural_scroll enabled
+    tap_button_map lrm
+    click_method clickfinger
+    dwt enabled
+    dwtp enabled
+}
+
+input {
+    xkb_layout us
+    xkb_options grp:alt_shift_toggle,compose:ralt
+    repeat_delay 300
+    repeat_rate 50
+}
+
+# ---- Appearance ----
+default_border pixel 2
+default_floating_border pixel 2
+gaps inner 8
+gaps outer 8
+
+# Nord colors
+client.focused          #81a1c1 #81a1c1 #2e3440 #81a1c1
+client.focused_inactive #2e3440 #2e3440 #d8dee9 #2e3440
+client.unfocused        #2e3440 #2e3440 #a6adc8 #2e3440
+client.urgent           #bf616a #bf616a #eceff4 #bf616a
+client.placeholder      #2e3440 #2e3440 #d8dee9 #2e3440
+
+# ---- Autostart ----
+exec lxqt-session
+exec lxqt-panel
+exec lxqt-globalkeysd
+exec lxqt-notificationd
+exec lxqt-powermanagement
+exec lxqt-policykit-agent
+
+exec swaybg -i ~/.local/share/wallpapers/origami-dark-labwc.png -m fill
+exec dunst
+exec nm-applet
+exec blueman-applet
+exec wl-paste --type text --watch cliphist store
+exec wl-paste --type image --watch cliphist store
+
+# ---- Keybindings ----
+bindsym $mod+Return exec $term
+bindsym $mod+Shift+Return exec $term --drop-down
+bindsym $mod+d exec $menu
+bindsym $mod+e exec pcmanfm-qt
+bindsym $mod+q kill
+bindsym $mod+f fullscreen toggle
+bindsym $mod+shift+space floating toggle
+bindsym $mod+v exec pavucontrol
+bindsym $mod+l exec lxqt-leave
+bindsym $mod+shift+r exec swaymsg reload
+
+# Focus
+bindsym $mod+left focus left
+bindsym $mod+right focus right
+bindsym $mod+up focus up
+bindsym $mod+down focus down
+
+# Move
+bindsym $mod+shift+left move left
+bindsym $mod+shift+right move right
+bindsym $mod+shift+up move up
+bindsym $mod+shift+down move down
+
+# Workspaces
+bindsym $mod+1 workspace 1
+bindsym $mod+2 workspace 2
+bindsym $mod+3 workspace 3
+bindsym $mod+4 workspace 4
+
+# Move to workspace
+bindsym $mod+shift+1 move container to workspace 1
+bindsym $mod+shift+2 move container to workspace 2
+bindsym $mod+shift+3 move container to workspace 3
+bindsym $mod+shift+4 move container to workspace 4
+
+# Screenshots
+bindsym Print exec grimshot copy screen
+bindsym shift+Print exec grimshot copy area
+bindsym ctrl+Print exec grimshot save screen ~/Pictures/Screenshots/$(date +%Y%m%d-%H%M%S).png
+
+# Volume
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume @DEFAULT_SINK@ +5%
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume @DEFAULT_SINK@ -5%
+bindsym XF86AudioMute exec pactl set-sink-mute @DEFAULT_SINK@ toggle
+
+# Media
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioPrev exec playerctl previous
+
+# Brightness
+bindsym XF86MonBrightnessUp exec brightnessctl set +5%
+bindsym XF86MonBrightnessDown exec brightnessctl set 5%-
+
+# Lock
+bindsym $mod+F12 exec swaylock -f -c 1e1e1e
+
+# Resize mode
+mode "resize" {
+    bindsym left resize shrink width 10 px or 10 ppt
+    bindsym right resize grow width 10 px or 10 ppt
+    bindsym up resize shrink height 10 px or 10 ppt
+    bindsym down resize grow height 10 px or 10 ppt
+
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+    bindsym $mod+r mode "default"
+}
+bindsym $mod+r mode "resize"
+
+# Window rules
+floating_criteria class pavucontrol
+floating_criteria class nm-connection-editor
+floating_criteria class blueman-manager
+floating_criteria title "Open File"
+floating_criteria title "Save As"
+
+for_window [class="qterminal"] opacity set 0.95
+for_window [class="pcmanfm-qt"] opacity set 0.95

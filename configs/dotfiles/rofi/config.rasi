@@ -1,0 +1,86 @@
+/* Rofi — Application Launcher & Menu */
+/* Nord-inspired theme for Labwc + LXQt */
+
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    icon-theme: "Tela";
+    font: "Noto Sans 12";
+    display-drun: " Apps";
+    display-run: " Run";
+    display-window: " Windows";
+    drun-display-format: "{name}";
+    terminal: "qterminal";
+}
+
+* {
+    bg:         #2e3440F2;
+    bg-alt:     #3b4252F2;
+    fg:         #d8dee9;
+    fg-alt:     #a6adc8;
+    accent:     #81a1c1;
+    urgent:     #bf616a;
+    selected:   #81a1c1F2;
+
+    background-color: transparent;
+    text-color:       @fg;
+    margin:  0;
+    padding: 0;
+    spacing: 0;
+}
+
+window {
+    width:            600px;
+    background-color: @bg;
+    border:           2px solid;
+    border-color:     @accent;
+    border-radius:    12px;
+    padding:          20px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    spacing:  8px;
+    padding:  8px 12px;
+    background-color: @bg-alt;
+    border-radius:    8px;
+    margin-bottom:    12px;
+}
+
+prompt {
+    text-color: @accent;
+}
+
+entry {
+    placeholder:       "Search...";
+    placeholder-color: @fg-alt;
+}
+
+listview {
+    lines:    8;
+    columns:  1;
+    spacing:  4px;
+    padding:  4px 0;
+    fixed-height: true;
+}
+
+element {
+    padding:       8px 12px;
+    border-radius: 6px;
+    spacing:       12px;
+}
+
+element selected {
+    background-color: @selected;
+    text-color:       @bg;
+}
+
+element-icon {
+    size: 24px;
+    vertical-align: 0.5;
+}
+
+element-text {
+    vertical-align: 0.5;
+    expand:         true;
+}

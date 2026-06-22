@@ -18,10 +18,19 @@ install_deps() {
         echo "==> RPM-based system detected. Using dnf..."
         sudo dnf install -y epel-release
         sudo dnf config-manager --set-enabled crb || sudo dnf config-manager --set-enabled powertools || true
+
+        # Enable Copr repos for packages not in default repos
+        DISTRO_ID=$(. /etc/os-release 2>/dev/null && echo "$ID")
+        if [ "$DISTRO_ID" = "fedora" ]; then
+            echo "==> Fedora detected. Enabling Copr repos..."
+            sudo dnf copr enable -y zhsj/labwc 2>/dev/null || true
+        fi
+
         sudo dnf groupinstall -y "Development Tools"
         sudo dnf install -y cmake ninja-build wget pkgconf git \
             labwc swaybg swayidle swaylock kanshi dunst breeze-icon-theme breeze-cursor-theme \
-            sddm emacs openbox kwin-x11 kwin-wayland
+            sddm emacs openbox kwin-x11 kwin-wayland \
+            wl-clipboard rofi wob xdg-desktop-portal-wlr xdg-desktop-portal-gtk grim slurp
         
         echo "==> Installing build dependencies for LXQt components..."
         sudo dnf install -y kf6-kwindowsystem-devel kf6-solid-devel kf6-kcoreaddons-devel \
@@ -48,7 +57,8 @@ install_deps() {
         echo "==> Installing build tools and basic dependencies..."
         sudo apt-get install -y build-essential cmake ninja-build wget pkg-config git \
             labwc swaybg swayidle swaylock kanshi dunst breeze-icon-theme breeze-cursor-theme \
-            sddm emacs-pgtk openbox kwin-x11 kwin-wayland
+            sddm emacs-pgtk openbox kwin-x11 kwin-wayland \
+            wl-clipboard rofi xdg-desktop-portal-wlr xdg-desktop-portal-gtk grim slurp
 
         echo "==> Fetching build dependencies for LXQt components..."
         # We get build-dep for various LXQt components to ensure we have libraries like KF6WindowSystem, PolkitQt6, etc.

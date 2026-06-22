@@ -1,0 +1,4 @@
+# cliphist — Wayland clipboard manager
+# Used with wl-paste --watch cliphist store in autostart
+# Decode history: cliphist list | cliphist decode
+# Keybind: W-Shift-V → wl-paste | cliphist list | wofi --dmenu | cliphist decode | wl-copy
