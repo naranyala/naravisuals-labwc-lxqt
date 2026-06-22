@@ -1,5 +1,0 @@
-/media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt/installer/build/CMakeFiles/NaraVisualsThemeManager.dir
-/media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt/installer/build/CMakeFiles/edit_cache.dir
-/media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt/installer/build/CMakeFiles/rebuild_cache.dir
-/media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt/installer/build/CMakeFiles/NaraVisualsThemeManager_autogen_timestamp_deps.dir
-/media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt/installer/build/CMakeFiles/NaraVisualsThemeManager_autogen.dir

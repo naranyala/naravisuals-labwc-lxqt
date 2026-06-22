@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_NaraVisualsThemeManager_FILE /media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt/installer/build/NaraVisualsThemeManager)
-set(__QT_DEPLOY_TARGET_NaraVisualsThemeManager_TYPE EXECUTABLE)

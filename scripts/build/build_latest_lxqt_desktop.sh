@@ -3,8 +3,8 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Dynamically get the directory where this script is located
-WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Dynamically get the root workspace directory (two levels up from this script)
+WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # Define target versions
 QT_VERSION="6.10.2"
@@ -73,26 +73,36 @@ install_deps
 # ==========================================
 echo "==> Downloading and building lightweight Qt6 ($QT_VERSION)..."
 cd "$WORKSPACE_DIR"
-if [ ! -d "qt6-build" ]; then
+if [ ! -f "/usr/local/qt6-lightweight/bin/qmake" ]; then
     if [ ! -f "$QT_TARBALL" ]; then
-        wget -c "$QT_URL"
+        echo "WARNING: The Qt6 source code tarball ($QT_TARBALL) is missing."
+        echo "It is approximately 1.3GB in size. You can download it manually from: $QT_URL"
+        read -p "Would you like this script to download it for you right now? [y/N]: " download_choice
+        if [[ "$download_choice" =~ ^[Yy]$ ]]; then
+            wget -c "$QT_URL"
+        else
+            echo "Skipping Qt6 compilation. Relying on system Qt6 packages instead."
+            SKIP_QT=1
+        fi
     fi
-    if [ ! -d "qt-everywhere-src-${QT_VERSION}" ]; then
-        tar -xf "$QT_TARBALL"
+    if [ -z "$SKIP_QT" ]; then
+        if [ ! -d "qt-everywhere-src-${QT_VERSION}" ]; then
+            tar -xf "$QT_TARBALL"
+        fi
+        mkdir -p qt6-build
+        cd qt6-build
+
+        # Configure Qt for a lightweight build
+        ../qt-everywhere-src-${QT_VERSION}/configure -release -nomake examples -nomake tests -opensource -confirm-license \
+            -prefix /usr/local/qt6-lightweight \
+            -skip qtwebengine -skip qt3d -skip qtmultimedia -skip qtdeclarative \
+            -make libs
+
+        cmake --build . --parallel $(nproc)
+        sudo cmake --install .
     fi
-    mkdir -p qt6-build
-    cd qt6-build
-
-    # Configure Qt for a lightweight build
-    ../qt-everywhere-src-${QT_VERSION}/configure -release -nomake examples -nomake tests -opensource -confirm-license \
-        -prefix /usr/local/qt6-lightweight \
-        -skip qtwebengine -skip qt3d -skip qtmultimedia -skip qtdeclarative \
-        -make libs
-
-    cmake --build . --parallel $(nproc)
-    sudo cmake --install .
 else
-    echo "Qt6 build directory already exists. Skipping Qt6 build."
+    echo "Qt6 is already installed at /usr/local/qt6-lightweight. Skipping Qt6 build."
 fi
 
 # Export paths so the newly built Qt6 is found by CMake for the next steps
