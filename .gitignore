@@ -5,6 +5,9 @@
 *.so
 *.dylib
 
+qt-everywhere-src-6.10.2.tar.xz
+qt-everywhere-src-6.10.2/
+
 # Test binary, built with `go test -c`
 *.test
 
