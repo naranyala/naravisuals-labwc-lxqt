@@ -1,6 +1,6 @@
 # Naravisuals Desktop Environment Suite
 
-The Naravisuals Desktop Environment Suite provides a comprehensive, production-ready configuration and customization layer for an LXQt desktop session running atop the Labwc Wayland compositor. It integrates highly customized dotfiles, Go-based deployment tools, native C++ Qt6 management applications, and robust automation scripts to deliver a streamlined, modern Linux desktop experience.
+The Naravisuals Desktop Environment Suite provides a comprehensive, production-ready configuration and customization layer for an LXQt desktop session running atop the Labwc Wayland compositor. It integrates highly customized dotfiles, native C++ deployment tools, Qt6 management applications, and robust automation scripts to deliver a streamlined, modern Linux desktop experience.
 
 ## Architecture and Abstraction Layers
 
@@ -12,8 +12,8 @@ Contains custom C++ Qt6 Graphical User Interfaces designed to manage system conf
 *   **SDDM GUI**: A dedicated graphical interface for parsing and modifying the Simple Desktop Display Manager (SDDM) configuration.
 
 ### 2. `cmd/` - Deployment Tooling
-Contains Go-based applications for system deployment and configuration management.
-*   **Dotfiles Installer**: A robust, cross-platform binary that installs, lists, and validates embedded dotfiles into the user's `~/.config` directory without requiring manual symbolic links.
+Contains native C++ applications for system deployment and configuration management.
+*   **Dotfiles Installer**: A robust, cross-platform C++ binary that installs, lists, and validates dotfiles into the user's `~/.config` directory without requiring manual symbolic links.
 
 ### 3. `configs/` - Core Configurations
 Contains the static configuration files and dotfiles required for the desktop ecosystem.
@@ -41,11 +41,11 @@ sudo ./scripts/build/build_latest_lxqt_desktop.sh
 ```
 
 ### 2. Dotfiles Installation
-To deploy the configurations to your local user environment, compile and execute the Go installer:
+To deploy the configurations to your local user environment, compile and execute the native C++ installer:
 
 ```bash
 cd cmd/dotfiles-manager
-go build -o lxqt-dotfiles .
+c++ -std=c++17 build.cpp -o lxqt-dotfiles
 ./lxqt-dotfiles install
 ```
 
