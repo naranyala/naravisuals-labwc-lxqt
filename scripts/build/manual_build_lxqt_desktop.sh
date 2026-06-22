@@ -14,22 +14,48 @@ LXQT_BT_VER="2.3.0"
 LIBLXQT_VER="2.3.0"
 LXQT_PANEL_VER="2.3.1"
 
-echo "==> Enabling deb-src repositories..."
-if [ -f /etc/apt/sources.list.d/ubuntu.sources ] && grep -q "^Types: deb$" /etc/apt/sources.list.d/ubuntu.sources; then
-    sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
-elif [ -f /etc/apt/sources.list ] && grep -q "^# deb-src" /etc/apt/sources.list; then
-    sudo sed -i '/^#\s*deb-src/s/^#\s*//' /etc/apt/sources.list
-fi
+install_deps() {
+    if command -v dnf &>/dev/null; then
+        echo "==> RPM-based system detected. Using dnf..."
+        sudo dnf install -y epel-release
+        sudo dnf config-manager --set-enabled crb || sudo dnf config-manager --set-enabled powertools || true
+        sudo dnf groupinstall -y "Development Tools"
+        sudo dnf install -y cmake ninja-build wget pkgconf git \
+            labwc swaybg swayidle swaylock kanshi dunst breeze-icon-theme breeze-cursor-theme \
+            sddm emacs openbox kwin-x11 kwin-wayland
+        
+        echo "==> Installing build dependencies for LXQt components..."
+        sudo dnf install -y kf6-kwindowsystem-devel kf6-solid-devel kf6-kcoreaddons-devel \
+            polkit-qt6-1-devel qt6-qtsvg-devel libdbusmenu-glib-devel \
+            xorg-x11-server-devel libxcb-devel xcb-util-devel xcb-util-keysyms-devel xcb-util-wm-devel \
+            qt6-qtbase-devel qt6-qttools-devel \
+            glib2-devel libX11-devel libX11-xcb-devel
+            
+    elif command -v apt-get &>/dev/null; then
+        echo "==> DEB-based system detected. Using apt-get..."
+        echo "==> Enabling deb-src repositories..."
+        if [ -f /etc/apt/sources.list.d/ubuntu.sources ] && grep -q "^Types: deb$" /etc/apt/sources.list.d/ubuntu.sources; then
+            sudo sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+        elif [ -f /etc/apt/sources.list ] && grep -q "^# deb-src" /etc/apt/sources.list; then
+            sudo sed -i '/^#\s*deb-src/s/^#\s*//' /etc/apt/sources.list
+        fi
 
-echo "==> Updating apt cache..."
-sudo apt-get update
+        echo "==> Updating apt cache..."
+        sudo apt-get update
 
-echo "==> Fixing any broken dependencies..."
-sudo apt-get install -f -y -o Dpkg::Options::='--force-overwrite'
+        echo "==> Fixing any broken dependencies..."
+        sudo apt-get install -f -y -o Dpkg::Options::='--force-overwrite'
 
-echo "==> Installing build tools and build dependencies..."
-sudo apt-get install -y build-essential cmake ninja-build wget pkg-config labwc swaybg swayidle swaylock kanshi dunst breeze-icon-theme breeze-cursor-theme sddm emacs-pgtk openbox kwin-x11 kwin-wayland
-sudo apt-get build-dep -y -o Dpkg::Options::='--force-overwrite' qt6-base liblxqt lxqt-panel
+        echo "==> Installing build tools and build dependencies..."
+        sudo apt-get install -y build-essential cmake ninja-build wget pkg-config labwc swaybg swayidle swaylock kanshi dunst breeze-icon-theme breeze-cursor-theme sddm emacs-pgtk openbox kwin-x11 kwin-wayland
+        sudo apt-get build-dep -y -o Dpkg::Options::='--force-overwrite' qt6-base liblxqt lxqt-panel
+    else
+        echo "Unsupported package manager. Please install dependencies manually."
+        exit 1
+    fi
+}
+
+install_deps
 
 # ==========================================
 # 1. Build a Lightweight Qt6

@@ -27,3 +27,11 @@ lxqt-dotfiles
 inspiration/
 thirdparty/
 
+# Nested git projects and active compilations
+lxqt/
+src/
+qt6-build/
+
+# C++ GUI Build directories
+apps/control-center/build/
+apps/sddm-gui/build/

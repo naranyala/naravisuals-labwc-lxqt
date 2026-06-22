@@ -118,7 +118,7 @@ set_active() {
 
   conky -c "$main_conf" -d 2>/dev/null || {
     log_warn "Could not start conky. Is it installed?"
-    log_dim "  Install: sudo apt install conky-all"
+    log_dim "  Install: sudo apt install conky-all or sudo dnf install conky"
     return 1
   }
 

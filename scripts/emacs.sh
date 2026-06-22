@@ -47,13 +47,20 @@ install_emacs_package() {
       }
     fi
 
-    # Last resort: try emacs-gtk explicitly
-    sudo apt-get install -y emacs-gtk 2>/dev/null && {
-      log_ok "Emacs installed (emacs-gtk)"
-      return 0
-    }
+    # Last resort: try emacs-gtk explicitly for apt, or dnf install emacs
+    if cmd_exists "apt-get"; then
+      sudo apt-get install -y emacs-gtk 2>/dev/null && {
+        log_ok "Emacs installed (emacs-gtk)"
+        return 0
+      }
+    elif cmd_exists "dnf"; then
+      sudo dnf install -y emacs 2>/dev/null && {
+        log_ok "Emacs installed via dnf fallback"
+        return 0
+      }
+    fi
 
-    log_error "Could not install Emacs. Try: sudo apt install emacs"
+    log_error "Could not install Emacs. Check your package manager."
     return 1
   fi
 }

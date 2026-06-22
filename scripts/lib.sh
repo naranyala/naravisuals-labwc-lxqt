@@ -47,7 +47,7 @@ require_cmds() {
   done
   if [ ${#missing[@]} -gt 0 ]; then
     log_error "Missing required tools: ${missing[*]}"
-    log_info "Install with: sudo apt install -y ${missing[*]}"
+    log_info "Install with: sudo apt install -y ${missing[*]} (Debian/Ubuntu) or sudo dnf install -y ${missing[*]} (Fedora/RHEL)"
     return 1
   fi
 }

@@ -4,8 +4,8 @@ The dotfiles configuration assumes Noto Sans and Noto Sans Mono are installed.
 Install them via:
 
   Debian/Ubuntu: sudo apt install fonts-noto fonts-noto-mono
+  Fedora/RHEL: sudo dnf install google-noto-sans-fonts google-noto-sans-mono-fonts
   Arch: sudo pacman -S noto-fonts noto-fonts-emoji
-  Fedora: sudo dnf install google-noto-sans-fonts google-noto-sans-mono-fonts
 
 To add custom fonts:
   1. Copy .ttf or .otf files here

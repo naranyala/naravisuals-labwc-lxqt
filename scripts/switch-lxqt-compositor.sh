@@ -21,13 +21,38 @@ declare -A COMPOSITOR_PACKAGES=(
 
 COMPOSITORS=("none" "${!COMPOSITOR_PACKAGES[@]}")
 
+install_pkg() {
+  local pkg="$1"
+  if command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y "$pkg"
+  elif command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get install -y "$pkg"
+  else
+    echo "Unknown package manager. Cannot install $pkg."
+  fi
+}
+
+is_installed() {
+  local pkg="$1"
+  if command -v dnf >/dev/null 2>&1; then
+    rpm -q "$pkg" >/dev/null 2>&1
+  elif command -v apt-get >/dev/null 2>&1; then
+    dpkg -s "$pkg" >/dev/null 2>&1
+  else
+    false
+  fi
+}
+
 echo "Checking and installing compositors..."
-sudo apt update
+if command -v apt-get >/dev/null 2>&1; then
+  sudo apt-get update
+fi
+
 for comp in "${!COMPOSITOR_PACKAGES[@]}"; do
   pkg="${COMPOSITOR_PACKAGES[$comp]}"
-  if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+  if ! is_installed "$pkg"; then
     echo "Installing $pkg..."
-    sudo apt install -y "$pkg"
+    install_pkg "$pkg" || true
   else
     echo "$pkg already installed."
   fi
