@@ -1,0 +1,23 @@
+# Binaries are installed by CMake's install() targets
+# These are extra files to include in the package
+
+configs/dotfiles/labwc/rc.xml		etc/xdg/naravisuals/labwc/
+configs/dotfiles/labwc/environment	etc/xdg/naravisuals/labwc/
+configs/dotfiles/labwc/themerc		etc/xdg/naravisuals/labwc/themerc-override
+configs/dotfiles/labwc/autostart	etc/xdg/naravisuals/labwc/
+configs/dotfiles/labwc/menu.xml		etc/xdg/naravisuals/labwc/
+configs/dotfiles/labwc/shutdown		etc/xdg/naravisuals/labwc/
+configs/dotfiles/lxqt/panel.conf	etc/xdg/naravisuals/lxqt/
+configs/dotfiles/lxqt/panel-stock.conf	etc/xdg/naravisuals/lxqt/
+configs/dotfiles/lxqt/session.conf	etc/xdg/naravisuals/lxqt/
+configs/dotfiles/lxqt/lxqt.conf		etc/xdg/naravisuals/lxqt/
+configs/dotfiles/lxqt/lxqt-panel.qss	etc/xdg/naravisuals/lxqt/
+configs/dotfiles/gtk-3.0/settings.ini	etc/xdg/naravisuals/gtk-3.0/
+configs/dotfiles/gtk-4.0/settings.ini	etc/xdg/naravisuals/gtk-4.0/
+configs/dotfiles/rofi/config.rasi	etc/xdg/naravisuals/rofi/
+configs/dotfiles/dunst/dunstrc		etc/xdg/naravisuals/dunst/
+configs/dotfiles/swaylock/config	etc/xdg/naravisuals/swaylock/
+configs/dotfiles/fontconfig/fonts.conf	etc/xdg/naravisuals/fontconfig/
+configs/dotfiles/wayland-sessions/lxqt-labwc.desktop	usr/share/wayland-sessions/
+configs/dotfiles/sddm/lxqt-labwc.conf	etc/sddm.conf.d/
+assets/wallpaper.jpg			usr/share/naravisuals/wallpapers/

@@ -11,7 +11,7 @@ XKB_DEFAULT_OPTIONS=grp:alt_shift_toggle,compose:ralt
 
 # Mouse cursor
 # Set by LXQt session exporter
-XCURSOR_THEME=breeze_cursors
+XCURSOR_THEME=Bibata-Modern-Ice
 XCURSOR_SIZE=24
 
 # Qt platform theme - use qt6ct for consistent look with LXQt
@@ -60,3 +60,8 @@ SEAT_BACKEND=builtin
 
 # GTK file chooser portal
 GTK_USE_PORTAL=1
+
+# Font rendering (Wayland)
+GDK_FONTCONFIG_HINT=1
+GDK_RENDERING=image
+PANGOCAIRO_BACKEND=fontconfig

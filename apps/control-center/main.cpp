@@ -197,7 +197,7 @@ public:
 
         auto *ntfsBtn = new QPushButton("NTFS Partition Manager");
         connect(ntfsBtn, &QPushButton::clicked, [](){
-            QString path = WORKSPACE_DIR + "/apps/ntfs-gui/build/naravisuals-ntfs-gui";
+            QString path = WORKSPACE_DIR + "/apps/ntfs-gui/build/nv-ntfs-gui";
             if (QFile::exists(path)) {
                 QProcess::startDetached(path);
             } else {
@@ -414,6 +414,17 @@ private:
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+
+    for (int i = 1; i < argc; ++i) {
+        QString arg = argv[i];
+        if (arg == "--run-script" && i + 1 < argc) {
+            runScript(argv[++i]);
+            return 0;
+        } else if (arg == "--run-terminal-script" && i + 1 < argc) {
+            runTerminalScript(argv[++i]);
+            return 0;
+        }
+    }
     
     app.setStyleSheet(
         "QMainWindow { background-color: #1e1e2e; color: #cdd6f4; }"

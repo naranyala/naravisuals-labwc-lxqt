@@ -1,38 +1,56 @@
-# Binaries for programs and plugins
+# ==========================================
+# Compiled binaries and libraries
+# ==========================================
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-qt-everywhere-src-6.10.2.tar.xz
-qt-everywhere-src-6.10.2/
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
-go.work
-
-# Built binary
 lxqt-dotfiles
+nv-*-gui
+test-*-gui
 
-# User requested
-inspiration/
-thirdparty/
+# ==========================================
+# Build directories and CMake files
+# ==========================================
+build/
+apps/*/build/
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+Testing/
 
-# Nested git projects and active compilations
+# ==========================================
+# Nested projects and vendor downloads
+# ==========================================
 lxqt/
 src/
 qt6-build/
+qt-everywhere-src-*/
+thirdparty/
 
-# C++ GUI Build directories
-apps/control-center/build/
-apps/sddm-gui/build/
-apps/ntfs-gui/build/
+# ==========================================
+# IDE and OS files
+# ==========================================
+.vscode/
+.idea/
+*.pro.user
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# AI Agent Workspaces & Logs
+# ==========================================
+.agents/
+
+# ==========================================
+# User requested
+# ==========================================
+inspiration/
+generate_guis.py

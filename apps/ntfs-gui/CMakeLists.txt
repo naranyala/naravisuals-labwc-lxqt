@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(naravisuals-ntfs-gui LANGUAGES CXX)
+project(nv-ntfs-gui LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,6 +9,10 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-add_executable(naravisuals-ntfs-gui main.cpp)
+add_executable(nv-ntfs-gui main.cpp)
 
-target_link_libraries(naravisuals-ntfs-gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+target_link_libraries(nv-ntfs-gui PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+
+install(TARGETS nv-ntfs-gui
+    RUNTIME DESTINATION bin
+)

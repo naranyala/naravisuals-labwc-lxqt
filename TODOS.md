@@ -1,4 +1,4 @@
-# Naravisuals Desktop Suite — Development Roadmap
+# Naravisuals Dotfiles — Development Roadmap
 
 ---
 

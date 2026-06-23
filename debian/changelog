@@ -1,0 +1,7 @@
+naravisuals-labwc-lxqt (1.0.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * 27 GUI configuration tools for LXQt + Labwc
+  * CPack multi-generator packaging support (deb/rpm/txz)
+
+ -- naranyala <naranyala>  Mon, 22 Jun 2026 10:00:00 +0000

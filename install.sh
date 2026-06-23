@@ -1,6 +1,7 @@
 #!/bin/bash
 # Naravisuals Desktop Suite — One-Command Installer
-# Installs everything: dotfiles, features, themes, tools
+# ====================================================
+# Thin orchestrator that delegates to specialized installers.
 #
 # Usage:
 #   bash install.sh                  # Interactive
@@ -8,6 +9,8 @@
 #   bash install.sh --minimal        # Core configs only
 #   bash install.sh --select         # Choose modules
 #   bash install.sh --dry-run        # Preview only
+#   bash install.sh --recover        # Fix partial install
+#   bash install.sh --check          # Pre-flight checks only
 
 set -euo pipefail
 
@@ -23,6 +26,8 @@ for arg in "$@"; do
         --minimal|-m)  MODE="minimal" ;;
         --select|-s)   MODE="select" ;;
         --dry-run|-n)  DRY_RUN=true ;;
+        --recover|-r)  MODE="recover" ;;
+        --check|-c)    MODE="check" ;;
         --help|-h)
             printf "Naravisuals Desktop Suite Installer\n\n"
             printf "Usage: bash install.sh [options]\n\n"
@@ -31,117 +36,237 @@ for arg in "$@"; do
             printf "  --minimal, -m   Install core configs only\n"
             printf "  --select, -s    Choose which modules to install\n"
             printf "  --dry-run, -n   Preview without making changes\n"
+            printf "  --recover, -r   Fix partial install (re-run failed steps)\n"
+            printf "  --check, -c     Run pre-flight checks only\n"
             printf "  --help, -h      Show this help\n"
             exit 0
             ;;
     esac
 done
 
+# ---- Logging ----
+INSTALL_LOG="${HOME}/.local/share/naravisuals-install.log"
+mkdir -p "$(dirname "$INSTALL_LOG")" 2>/dev/null || true
+LOG_FILE="$INSTALL_LOG"
+
+echo "=== Naravisuals Install $(date) ===" >> "$LOG_FILE"
+echo "Mode: $MODE" >> "$LOG_FILE"
+
+# ---- Check mode ----
+if [ "$MODE" = "check" ]; then
+    check_prereqs "full"
+    exit $?
+fi
+
 print_header "Naravisuals Desktop Suite Installer"
 
-# --- Step 1: Build dotfiles installer ---
-log_step "Building dotfiles installer"
-DOTFILES_BIN="$SCRIPT_DIR/cmd/dotfiles-manager/lxqt-dotfiles"
-
-if [ ! -f "$DOTFILES_BIN" ] || [ "$MODE" = "full" ]; then
-    if [ "$DRY_RUN" = true ]; then
-        log_dim "[DRY-RUN] Would build: c++ -std=c++17 cmd/dotfiles-manager/build.cpp -o cmd/dotfiles-manager/lxqt-dotfiles"
-    else
-        cd "$SCRIPT_DIR/cmd/dotfiles-manager"
-        c++ -std=c++17 build.cpp -o lxqt-dotfiles 2>/dev/null && {
-            log_ok "Dotfiles installer built"
-        } || {
-            log_warn "Could not build dotfiles installer (missing g++?)"
-            log_info "Install: sudo apt install g++ or sudo dnf install gcc-c++"
-        }
-        cd "$SCRIPT_DIR"
-    fi
-else
-    log_ok "Dotfiles installer already built"
+# ---- Pre-flight ----
+if [ "$MODE" != "minimal" ]; then
+    check_prereqs "$MODE" || {
+        log_error "Pre-flight checks failed. Run with --check for details."
+        log_info "Log saved to: $INSTALL_LOG"
+        exit 1
+    }
 fi
 
-# --- Step 2: Install dotfiles ---
-log_step "Installing dotfiles to ~/.config"
-if [ -f "$DOTFILES_BIN" ]; then
-    if [ "$DRY_RUN" = true ]; then
-        log_dim "[DRY-RUN] Would run: $DOTFILES_BIN install"
-    else
-        "$DOTFILES_BIN" install
-    fi
-else
-    log_warn "Dotfiles installer not available, copying manually..."
-    if [ "$DRY_RUN" != true ]; then
-        # Fallback: manual copy
-        for f in $(grep '"configs/' "$SCRIPT_DIR/cmd/dotfiles-manager/build.cpp" | sed 's/.*"configs\///' | sed 's/".*//' ); do
-            src="$SCRIPT_DIR/configs/dotfiles/$f"
-            dst="$HOME/.config/$(dirname "$f" | sed 's|^lxqt/||;s|^labwc/||;s|^gtk-3.0/||;s|^gtk-4.0/||')"
-            mkdir -p "$HOME/.config/$(dirname "$f")"
-            [ -f "$src" ] && cp "$src" "$HOME/.config/$f" 2>/dev/null
-        done
-        log_ok "Dotfiles copied (manual fallback)"
-    fi
-fi
+# ---- Step tracking (persistent, not /tmp) ----
+STEP_FILE="$SCRIPT_DIR/.install-state"
+touch "$STEP_FILE"
 
-# --- Step 3: Install system files (requires sudo) ---
-log_step "Installing system files"
-if [ "$DRY_RUN" != true ]; then
-    if [ -f "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/lxqt-labwc.desktop" ]; then
-        sudo cp "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/lxqt-labwc.desktop" \
-            /usr/share/wayland-sessions/ 2>/dev/null && \
-            log_ok "Installed wayland session" || log_warn "Could not install wayland session"
-    fi
-    if [ -f "$SCRIPT_DIR/configs/dotfiles/sddm/lxqt-labwc.conf" ]; then
-        sudo mkdir -p /etc/sddm.conf.d/ 2>/dev/null
-        sudo cp "$SCRIPT_DIR/configs/dotfiles/sddm/lxqt-labwc.conf" \
-            /etc/sddm.conf.d/ 2>/dev/null && \
-            log_ok "Installed SDDM config" || log_warn "Could not install SDDM config"
-    fi
-fi
+step_done() {
+    local step="$1"
+    grep -q "^${step}$" "$STEP_FILE" 2>/dev/null
+}
 
-# --- Step 4: Feature modules ---
-if [ "$MODE" = "minimal" ]; then
-    log_info "Minimal mode: skipping feature modules"
-elif [ "$MODE" = "full" ] || [ "$MODE" = "select" ]; then
-    log_step "Installing feature modules"
-    if [ "$DRY_RUN" = true ]; then
-        log_dim "[DRY-RUN] Would run feature modules"
-    else
-        bash "$SCRIPT_DIR/scripts/install-all.sh" $([ "$MODE" = "select" ] && echo "--select" || echo "--all")
-    fi
-fi
+step_mark() {
+    local step="$1"
+    echo "$step" >> "$STEP_FILE"
+}
 
-# --- Step 5: Build Control Center (optional) ---
-if [ "$MODE" = "full" ]; then
-    log_step "Building Control Center"
-    if [ "$DRY_RUN" = true ]; then
-        log_dim "[DRY-RUN] Would build Control Center"
-    else
-        if cmd_exists cmake && cmd_exists ninja; then
-            cd "$SCRIPT_DIR/apps/control-center"
-            mkdir -p build && cd build
-            cmake -GNinja .. 2>/dev/null && ninja 2>/dev/null && {
-                log_ok "Control Center built"
-            } || {
-                log_warn "Control Center build failed (Qt6 dev packages needed)"
-            }
-            cd "$SCRIPT_DIR"
+step_clear() {
+    local step="$1"
+    sed -i "/^${step}$/d" "$STEP_FILE" 2>/dev/null || true
+}
+
+# ---- Step 1: Build dotfiles installer (optional, for speed) ----
+step_name="build-dotfiles"
+if ! step_done "$step_name"; then
+    log_step "Building dotfiles installer"
+    DOTFILES_BIN="$SCRIPT_DIR/cmd/dotfiles-manager/lxqt-dotfiles"
+
+    if [ ! -f "$DOTFILES_BIN" ] || [ "$MODE" = "full" ]; then
+        if [ "$DRY_RUN" = true ]; then
+            log_dim "[DRY-RUN] Would build: c++ -std=c++17 build.cpp -o lxqt-dotfiles"
         else
-            log_warn "cmake/ninja not found, skipping Control Center build"
+            BUILD_DIR="$SCRIPT_DIR/cmd/dotfiles-manager"
+            if [ ! -d "$BUILD_DIR" ] || [ ! -f "$BUILD_DIR/build.cpp" ]; then
+                log_warn "C++ build source not found, using shell installer"
+            elif ! cmd_exists "c++" && ! cmd_exists "g++" && ! cmd_exists "clang++"; then
+                log_warn "No C++ compiler found, using shell installer"
+                log_info "Install: sudo apt install g++"
+            else
+                cd "$BUILD_DIR"
+                if c++ -std=c++17 build.cpp -o lxqt-dotfiles 2>>"$LOG_FILE"; then
+                    log_ok "Dotfiles installer built"
+                    step_mark "$step_name"
+                else
+                    log_warn "Build failed, using shell installer"
+                fi
+                cd "$SCRIPT_DIR"
+            fi
+        fi
+    else
+        log_ok "Dotfiles installer already built"
+        step_mark "$step_name"
+    fi
+fi
+
+# ---- Step 2: Install dotfiles (canonical installer) ----
+step_name="install-dotfiles"
+if ! step_done "$step_name"; then
+    log_step "Installing dotfiles to ~/.config"
+
+    INSTALLER_ARGS=""
+    [ "$DRY_RUN" = true ] && INSTALLER_ARGS="--dry-run"
+    [ "$FORCE" = true ] && INSTALLER_ARGS="$INSTALLER_ARGS --force"
+
+    # Prefer C++ binary if available, fall back to shell script
+    if [ -f "${DOTFILES_BIN:-}" ]; then
+        log "Using C++ installer"
+        if "$DOTFILES_BIN" install 2>>"$LOG_FILE"; then
+            log_ok "Dotfiles installed"
+            step_mark "$step_name"
+        else
+            log_warn "C++ installer had issues, trying shell installer"
+            step_clear "$step_name"
+        fi
+    fi
+
+    # Shell installer (canonical — handles backup, validation, etc.)
+    if ! step_done "$step_name"; then
+        log "Using shell installer"
+        if bash "$SCRIPT_DIR/scripts/build/install.sh" $INSTALLER_ARGS 2>>"$LOG_FILE"; then
+            log_ok "Dotfiles installed"
+            step_mark "$step_name"
+        else
+            log_error "Dotfile installation failed (check log)"
+            log_info "Log: $INSTALL_LOG"
+            log_info "Retry: bash install.sh --recover"
         fi
     fi
 fi
 
-# --- Summary ---
-print_summary "Installation Complete" "ok"
-printf "\n${BOLD}What was installed:${RST}\n"
-printf "  - Dotfiles to ~/.config/\n"
-printf "  - System files (SDDM, wayland session)\n"
-if [ "$MODE" = "full" ]; then
-    printf "  - Feature modules (clipboard, OSD, launcher, portals)\n"
-    printf "  - Themes, icons, cursors, fonts, wallpapers\n"
-    printf "  - Control Center binary\n"
+# ---- Step 3: Install system files ----
+step_name="install-system"
+if ! step_done "$step_name"; then
+    log_step "Installing system files"
+    if [ "$DRY_RUN" != true ]; then
+        sys_fail=0
+        if [ -f "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/lxqt-labwc.desktop" ]; then
+            if sudo cp "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/lxqt-labwc.desktop" \
+                /usr/share/wayland-sessions/ 2>>"$LOG_FILE"; then
+                log_ok "Installed wayland session"
+            else
+                log_warn "Could not install wayland session (sudo required)"
+                sys_fail=$((sys_fail + 1))
+            fi
+        fi
+        if [ -f "$SCRIPT_DIR/configs/dotfiles/sddm/lxqt-labwc.conf" ]; then
+            if sudo mkdir -p /etc/sddm.conf.d/ 2>/dev/null && \
+               sudo cp "$SCRIPT_DIR/configs/dotfiles/sddm/lxqt-labwc.conf" \
+                /etc/sddm.conf.d/ 2>>"$LOG_FILE"; then
+                log_ok "Installed SDDM config"
+            else
+                log_warn "Could not install SDDM config (sudo required)"
+                sys_fail=$((sys_fail + 1))
+            fi
+        fi
+        if [ "$sys_fail" -eq 0 ]; then
+            step_mark "$step_name"
+        fi
+    fi
 fi
+
+# ---- Step 4: Feature modules ----
+step_name="install-features"
+if [ "$MODE" = "minimal" ]; then
+    log_info "Minimal mode: skipping feature modules"
+elif [ "$MODE" = "full" ] || [ "$MODE" = "select" ]; then
+    if ! step_done "$step_name"; then
+        log_step "Installing feature modules"
+        if [ "$DRY_RUN" = true ]; then
+            log_dim "[DRY-RUN] Would run feature modules"
+        else
+            select_flag=""
+            run_flags=""
+            [ "$MODE" = "select" ] && select_flag="--select"
+            [ "$MODE" = "full" ] && run_flags="--all"
+            if bash "$SCRIPT_DIR/scripts/install-all.sh" $select_flag $run_flags 2>>"$LOG_FILE"; then
+                log_ok "Feature modules installed"
+                step_mark "$step_name"
+            else
+                log_warn "Some feature modules had errors (check log)"
+                log_info "Re-run with: bash install.sh --recover"
+            fi
+        fi
+    fi
+fi
+
+# ---- Step 5: Build Control Center (optional) ----
+step_name="build-control-center"
+if [ "$MODE" = "full" ]; then
+    if ! step_done "$step_name"; then
+        log_step "Building Control Center"
+        if [ "$DRY_RUN" = true ]; then
+            log_dim "[DRY-RUN] Would build Control Center"
+        elif [ ! -d "$SCRIPT_DIR/apps/control-center" ]; then
+            log_warn "apps/control-center not found, skipping"
+        elif ! cmd_exists cmake || ! cmd_exists ninja; then
+            log_warn "cmake/ninja not found, skipping Control Center"
+            log_info "Install: sudo apt install cmake ninja-build"
+        else
+            cd "$SCRIPT_DIR/apps/control-center"
+            rm -rf build 2>/dev/null || true
+            mkdir -p build && cd build
+            if cmake -GNinja .. 2>>"$LOG_FILE" && ninja 2>>"$LOG_FILE"; then
+                log_ok "Control Center built"
+                step_mark "$step_name"
+            else
+                log_warn "Control Center build failed"
+                log_info "Install Qt6 dev packages: sudo apt install qt6-base-dev"
+            fi
+            cd "$SCRIPT_DIR"
+        fi
+    fi
+fi
+
+# ---- Step 6: Run validation ----
+log_step "Validating installation"
+if [ -f "$SCRIPT_DIR/validate.sh" ]; then
+    if bash "$SCRIPT_DIR/validate.sh" --quiet 2>/dev/null; then
+        log_ok "Validation passed"
+    else
+        log_warn "Some validation checks failed"
+        log_info "Run: bash validate.sh"
+    fi
+fi
+
+# ---- Summary ----
+print_summary "Installation Complete" "ok"
+
+printf "\n${BOLD}Installation log:${RST} %s\n" "$INSTALL_LOG"
+printf "\n${BOLD}What was installed:${RST}\n"
+step_done "build-dotfiles"      && printf "  [done] Dotfiles installer built\n"   || printf "  [--] Dotfiles installer\n"
+step_done "install-dotfiles"    && printf "  [done] Dotfiles to ~/.config/\n"    || printf "  [--] Dotfiles\n"
+step_done "install-system"      && printf "  [done] System files\n"              || printf "  [--] System files\n"
+step_done "install-features"    && printf "  [done] Feature modules\n"           || printf "  [--] Feature modules\n"
+step_done "build-control-center" && printf "  [done] Control Center\n"           || printf "  [--] Control Center\n"
+
 printf "\n${BOLD}Next steps:${RST}\n"
 printf "  1. Log out and select 'LXQt (labwc)' from SDDM\n"
 printf "  2. Run: ${GREEN}bash scripts/install-all.sh --select${RST} for additional themes\n"
-printf "  3. Build Control Center: ${GREEN}cd apps/control-center/build && ./naravisuals-control-center${RST}\n"
+printf "\n${BOLD}Troubleshooting:${RST}\n"
+printf "  - View log: ${GREEN}cat %s${RST}\n" "$INSTALL_LOG"
+printf "  - Validate: ${GREEN}bash validate.sh${RST}\n"
+printf "  - Restore:  ${GREEN}bash scripts/build/install.sh --restore${RST}\n"
+printf "  - Full guide: ${GREEN}cat TROUBLESHOOT.md${RST}\n"

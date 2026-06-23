@@ -87,6 +87,25 @@ private:
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+
+    for (int i = 1; i < argc; ++i) {
+        QString arg = argv[i];
+        if (arg == "--apply-theme" && i + 1 < argc) {
+            QString selectedTheme = argv[++i];
+            QString tempFile = "/tmp/sddm-custom.conf";
+            QFile file(tempFile);
+            if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                QTextStream out(&file);
+                out << "[Theme]\nCurrent=" << selectedTheme << "\n";
+                file.close();
+                QProcess::execute("pkexec", {"mkdir", "-p", "/etc/sddm.conf.d/"});
+                QProcess process;
+                process.start("pkexec", {"cp", tempFile, "/etc/sddm.conf.d/custom.conf"});
+                process.waitForFinished();
+            }
+            return 0;
+        }
+    }
     
     // Add a basic stylesheet for aesthetics
     app.setStyleSheet("QWidget { font-family: sans-serif; font-size: 14px; }"

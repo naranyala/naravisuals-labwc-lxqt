@@ -279,6 +279,25 @@ private:
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
 
+    for (int i = 1; i < argc; ++i) {
+        QString arg = argv[i];
+        if (arg == "--mount" && i + 2 < argc) {
+            QString path = argv[++i];
+            QString label = argv[++i];
+            QString userName = qgetenv("USER");
+            if (userName.isEmpty()) userName = "naranyala";
+            QString mountPoint = "/media/" + userName + "/" + label;
+            QString script = QString("mkdir -p '%1' && mount '%2' '%3'").arg(mountPoint, path, mountPoint);
+            QProcess::execute("pkexec", {"bash", "-c", script});
+            return 0;
+        } else if (arg == "--unmount" && i + 1 < argc) {
+            QString path = argv[++i];
+            QString script = QString("umount '%1'").arg(path);
+            QProcess::execute("pkexec", {"bash", "-c", script});
+            return 0;
+        }
+    }
+
     NtfsGui gui;
     gui.show();
     return app.exec();

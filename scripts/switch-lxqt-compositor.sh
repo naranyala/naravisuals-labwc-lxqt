@@ -48,9 +48,9 @@ install_pkg() {
   fi
 }
 
-is_installed() {
+is_pkg_installed() {
   local pkg="$1"
-  is_installed_check "$pkg" 2>/dev/null || is_installed "$pkg"
+  command -v "$pkg" &>/dev/null || is_installed "$pkg" 2>/dev/null
 }
 
 echo "Checking and installing compositors..."
@@ -62,7 +62,7 @@ fi
 
 for comp in "${!COMPOSITOR_PACKAGES[@]}"; do
   pkg="$(resolve_pkg "${COMPOSITOR_PACKAGES[$comp]}")"
-  if ! is_installed "$pkg"; then
+  if ! is_pkg_installed "$pkg"; then
     echo "Installing $pkg..."
     install_pkg "$pkg" || true
   else

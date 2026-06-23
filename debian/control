@@ -1,0 +1,32 @@
+Source: naravisuals-labwc-lxqt
+Section: x11
+Priority: optional
+Maintainer: naranyala
+Build-Depends: debhelper-compat (= 13),
+               cmake (>= 3.16),
+               ninja-build,
+               qt6-base-dev (>= 6.4),
+               g++ (>= 11)
+Standards-Version: 4.6.2
+Homepage: https://github.com/naranyala/naravisuals-labwc-lxqt
+Rules-Requires-Root: no
+
+Package: naravisuals-labwc-lxqt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends},
+         qt6-base (>= 6.4),
+         libqt6widgets6 (>= 6.4),
+         libqt6gui6 (>= 6.4),
+         libqt6core6 (>= 6.4)
+Recommends: labwc, lxqt-panel, qt6ct, kvantum,
+            swaybg, swayidle, swaylock,
+            dunst, rofi-wayland, wl-clipboard,
+            grim, slurp, playerctl, pavucontrol-qt,
+            breeze-icon-theme, breeze-cursor-theme
+Description: LXQt + Labwc Wayland desktop environment GUI suite
+ A comprehensive suite of GUI configuration tools for managing
+ LXQt桌面 + Labwc Wayland compositor environments.
+ .
+ Includes tools for managing audio, bluetooth, display, network,
+ power, input, themes, wallpapers, fonts, desktop entries,
+ window manager settings, and more.

@@ -2,8 +2,7 @@
 # LXQt Rice — Full Resource Installer
 # ======================================
 # Composable orchestrator that runs all download scripts
-# in sequence. Each script is independent and can be
-# run separately, but this provides a unified flow.
+# in sequence with dependency ordering.
 #
 # Usage:
 #   bash install-all.sh               # Interactive (ask for each)
@@ -12,39 +11,60 @@
 #   bash install-all.sh --dry-run     # Preview only
 #   bash install-all.sh themes icons  # Run specific modules only
 #
-# Design: each sub-script is sourced, not exec'd, so they
-# share the same environment and library.
+# Module ordering respects dependencies:
+#   1. System setup (repos, portals, fontconfig)
+#   2. Core tools (clipboard, OSD, launcher, kvantum)
+#   3. Visual resources (themes, icons, cursors, fonts, wallpapers)
+#   4. Optional extras (neofetch, conky, emacs)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/lib.sh"
 
-# ---- Available Modules ----
-# Format: "SCRIPT|NAME|DESCRIPTION"
+# ---- Module Definitions ----
+# Format: "SCRIPT|NAME|DESCRIPTION|GROUP"
+# GROUP determines ordering and dependency resolution
 MODULES=(
-  "features/setup-fedora-repos.sh|Fedora/RHEL Repos|Enable EPEL, CRB, Copr repos for RPM-based distros"
-  "features/install-clipboard.sh|Clipboard Manager|wl-clipboard + cliphist for Wayland clipboard history"
-  "features/install-osd.sh|OSD Overlay|wob for volume/brightness on-screen display"
-  "features/install-launcher.sh|App Launcher|rofi-wayland with Nord theme"
-  "features/setup-portals.sh|XDG Portals|Screen sharing & file chooser portals"
-  "features/install-kvantum.sh|Kvantum Themes|SVG-based Qt theme engine + qt6ct"
-  "features/wallust-setup.sh|Dynamic Theming|Wallust wallpaper color extraction"
-  "features/install-compositor.sh hyprland|Hyprland|Animated tiling Wayland compositor"
-  "features/install-compositor.sh sway|Sway|i3-compatible tiling Wayland compositor"
-  "features/install-compositor.sh wayfire|Wayfire|3D plugin-based Wayland compositor"
-  "themes.sh|Theme Downloader|GTK/Qt window themes (Nordic, Dracula, Catppuccin...)"
-  "icons.sh|Icon Themes|Desktop icon packs (Tela, Papirus, Candy...)"
-  "cursors.sh|Cursor Themes|Mouse cursor themes (Bibata, Capitaine, Nordic...)"
-  "fonts.sh|Font Installer|Nerd Fonts & UI fonts (JetBrains Mono, Fira Code...)"
-  "wallpapers.sh|Wallpaper Packs|Wallpaper collections (Nord, Catppuccin, Gruvbox...)"
-  "labwc-themes.sh|labwc Decorations|Window decoration themes (Vent, Nordic, Dracula...)"
-  "lxqt-themes.sh|LXQt Widget Themes|Qt palette themes for lxqt-config-appearance"
-  "neofetch.sh|System Fetch|Install & configure neofetch/fastfetch/hyfetch"
-  "conky.sh|Conky Desktop|Conky system monitor configs"
-  "emacs.sh|Emacs Editor|Install Emacs GUI + minimal beginner-friendly config"
+  # Group 1: System setup (run first)
+  "features/setup-fedora-repos.sh|Fedora/RHEL Repos|Enable EPEL, CRB, Copr repos|system"
+  "features/setup-fontconfig.sh|Font Rendering|fontconfig for text rendering|system"
+  "features/setup-portals.sh|XDG Portals|Screen sharing & file dialogs|system"
+
+  # Group 2: Core tools
+  "features/install-clipboard.sh|Clipboard Manager|wl-clipboard + cliphist|tools"
+  "features/install-osd.sh|OSD Overlay|wob for volume/brightness|tools"
+  "features/install-launcher.sh|App Launcher|rofi-wayland|tools"
+  "features/install-kvantum.sh|Kvantum Themes|Qt theme engine + qt6ct|tools"
+  "features/wallust-setup.sh|Dynamic Theming|Wallust color extraction|tools"
+
+  # Group 3: Compositor (optional, user chooses)
+  "features/install-compositor.sh hyprland|Hyprland|Animated tiling compositor|compositor"
+  "features/install-compositor.sh sway|Sway|i3-compatible tiling|compositor"
+  "features/install-compositor.sh wayfire|Wayfire|3D plugin compositor|compositor"
+
+  # Group 4: Visual resources (download order doesn't matter much)
+  "themes.sh|Theme Downloader|GTK/Qt window themes|visual"
+  "icons.sh|Icon Themes|Desktop icon packs|visual"
+  "cursors.sh|Cursor Themes|Mouse cursor themes|visual"
+  "fonts.sh|Font Installer|Nerd Fonts & UI fonts|visual"
+  "wallpapers.sh|Wallpaper Packs|Wallpaper collections|visual"
+  "labwc-themes.sh|labwc Decorations|Window decoration themes|visual"
+  "lxqt-themes.sh|LXQt Widget Themes|Qt palette themes|visual"
+
+  # Group 5: Optional extras
+  "neofetch.sh|System Fetch|neofetch/fastfetch/hyfetch|extras"
+  "conky.sh|Conky Desktop|Conky system monitor|extras"
+  "emacs.sh|Emacs Editor|Emacs GUI + config|extras"
+  "install-minimal-apps.sh --both|Minimal Apps|Qt + GTK equivalent apps|extras"
 )
 
+# Module dependencies: KEY=module_index, VALUE=space-separated indices that must run first
+# This ensures fontconfig runs before fonts, etc.
+declare -A DEPENDS_ON=()
+# fontconfig (index 1) must run before fonts (index 14)
+DEPENDS_ON[14]="1"
+
 run_module() {
-  local script="$1" name="$2" desc="$3"
+  local idx="$1" script="$2" name="$3" desc="$4"
 
   printf "\n"
   printf "${BOLD}${MAGENTA}╔══════════════════════════════════════════╗${RST}\n"
@@ -60,9 +80,21 @@ run_module() {
     esac
   fi
 
-  if [ "$DRY_RUN" = "true" ]; then
+  if [ "$DRY_RUN" = true ]; then
     log_info "[DRY-RUN] Would run: bash $script"
     return 0
+  fi
+
+  # Check dependencies
+  if [ -n "${DEPENDS_ON[$idx]:-}" ]; then
+    for dep_idx in ${DEPENDS_ON[$idx]}; do
+      if [ "${RESULTS[$dep_idx]:-skip}" != "ok" ]; then
+        local dep_name
+        IFS='|' read -r _ dep_name _ _ <<< "${MODULES[$dep_idx]}"
+        log_warn "Dependency not met: $dep_name must run successfully first"
+        return 1
+      fi
+    done
   fi
 
   log_step "Starting: $name"
@@ -90,14 +122,15 @@ print_banner() {
 print_summary_table() {
   printf "\n${BOLD}${CYAN}Installation Summary${RST}\n"
   printf "${DIM}%s${RST}\n" "────────────────────────────────────────────────"
-  printf "${BOLD}%-20s %s${RST}\n" "MODULE" "STATUS"
+  printf "${BOLD}%-20s %-10s %s${RST}\n" "MODULE" "STATUS" "GROUP"
   printf "${DIM}%s${RST}\n" "────────────────────────────────────────────────"
-  for entry in "${RESULTS[@]}"; do
-    IFS='|' read -r name status <<< "$entry"
+  for i in "${!RESULTS[@]}"; do
+    IFS='|' read -r name status <<< "${RESULTS[$i]}"
+    IFS='|' read -r _ _ _ group <<< "${MODULES[$i]}"
     local icon="${GREEN}✔${RST}"
     [ "$status" = "fail" ] && icon="${RED}✘${RST}"
     [ "$status" = "skip" ] && icon="${YELLOW}–${RST}"
-    printf "  %-20s %b\n" "$name" "$icon"
+    printf "  %-20s %b %-10s\n" "$name" "$icon" "$group"
   done
   printf "${DIM}%s${RST}\n" "────────────────────────────────────────────────"
 }
@@ -107,13 +140,18 @@ show_menu() {
   printf "${DIM}  Enter numbers separated by space (e.g., '1 2 3')${RST}\n"
   printf "${DIM}  Enter 'a' for all, 'q' to quit${RST}\n\n"
 
+  local prev_group=""
   local i=1
   for entry in "${MODULES[@]}"; do
-    IFS='|' read -r _ name desc <<< "$entry"
+    IFS='|' read -r _ name desc group <<< "$entry"
+    if [ "$group" != "$prev_group" ]; then
+      printf "\n  ${BOLD}${CYAN}── %s ──${RST}\n" "${group^^}"
+      prev_group="$group"
+    fi
     printf "  ${BOLD}%2d)${RST} %-20s ${DIM}%s${RST}\n" "$i" "$name" "$desc"
     i=$((i + 1))
   done
-  printf "  ${BOLD} a)${RST} ${GREEN}Install All${RST}\n"
+  printf "\n  ${BOLD} a)${RST} ${GREEN}Install All${RST}\n"
   printf "  ${BOLD} q)${RST} Quit\n"
   printf "\n${BOLD}Selection: ${RST}"
   read -r selection
@@ -136,8 +174,8 @@ show_menu() {
 INTERACTIVE=false
 DRY_RUN=false
 RUN_ALL=false
-declare -a SELECTED
-declare -a RESULTS
+declare -a SELECTED=()
+declare -a RESULTS=()
 
 # Parse args
 for arg in "$@"; do
@@ -146,6 +184,7 @@ for arg in "$@"; do
     --dry-run) DRY_RUN=true ;;
     --interactive|-i) INTERACTIVE=true ;;
     --select) show_menu ;;
+    --force|-f) ;; # Accept but ignore (sub-scripts handle it)
     --help|-h)
       printf "LXQt Rice — Full Resource Installer\n\n"
       printf "Usage: bash install-all.sh [options] [modules...]\n\n"
@@ -155,17 +194,21 @@ for arg in "$@"; do
       printf "  --interactive    Ask before each module\n"
       printf "  --dry-run        Preview without downloading\n"
       printf "  --help, -h       Show this help\n\n"
-      printf "Modules: themes, icons, cursors, fonts, wallpapers,\n"
-      printf "         labwc-themes, lxqt-themes, neofetch, conky\n"
+      printf "Modules are grouped by dependency:\n"
+      printf "  system:   repos, fontconfig, portals\n"
+      printf "  tools:    clipboard, OSD, launcher, kvantum\n"
+      printf "  compositor: hyprland, sway, wayfire\n"
+      printf "  visual:   themes, icons, cursors, fonts, wallpapers\n"
+      printf "  extras:   neofetch, conky, emacs\n"
       exit 0
       ;;
     *)
-      # Map module names to indices (must handle set -u)
+      # Map module names to indices
       i=0
       for entry in "${MODULES[@]}"; do
-        IFS='|' read -r script name _ <<< "$entry"
-        basename="${script%.sh}"
-        if [ "$arg" = "$basename" ] || [ "$arg" = "$name" ]; then
+        IFS='|' read -r script name _ _ <<< "$entry"
+        mod_name="${script%.sh}"
+        if [ "$arg" = "$mod_name" ] || [ "$arg" = "$name" ]; then
           SELECTED[$i]=true
         fi
         i=$((i + 1))
@@ -185,26 +228,24 @@ sel_count=${#SELECTED[@]}
 set -u
 
 if [ "$RUN_ALL" = true ] || [ "$sel_count" -eq 0 ]; then
-  # Either --all was passed, or no specific modules selected
   RUN_ALL=true
 fi
 
 if [ "$RUN_ALL" != true ] && [ "$sel_count" -eq 0 ]; then
-  # No selection made, show menu
   show_menu
 fi
 
-# Run modules
+# Run modules in order (dependency-aware)
 total=${#MODULES[@]}
 ok_count=0
 fail_count=0
 skip_count=0
 
 for ((i = 0; i < total; i++)); do
-  IFS='|' read -r script name desc <<< "${MODULES[$i]}"
+  IFS='|' read -r script name desc group <<< "${MODULES[$i]}"
 
   if [ "$RUN_ALL" = true ] || [ "${SELECTED[$i]:-false}" = true ]; then
-    if run_module "$script" "$name" "$desc"; then
+    if run_module "$i" "$script" "$name" "$desc"; then
       RESULTS+=("$name|ok")
       ok_count=$((ok_count + 1))
     else

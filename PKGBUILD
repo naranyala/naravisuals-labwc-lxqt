@@ -101,12 +101,23 @@ package() {
     install -Dm644 configs/compositors/wayfire/wayfire.ini "$pkgdir/etc/xdg/naravisuals/compositors/wayfire/wayfire.ini"
 
     # Install binaries
-    install -Dm755 cmd/dotfiles-manager/lxqt-dotfiles "$pkgdir/usr/bin/naravisuals-dotfiles"
-    install -Dm755 apps/control-center/build/naravisuals-control-center "$pkgdir/usr/bin/naravisuals-control-center"
-    install -Dm755 apps/sddm-gui/build/sddm-gui "$pkgdir/usr/bin/naravisuals-sddm-gui"
+    install -Dm755 cmd/dotfiles-manager/lxqt-dotfiles "$pkgdir/usr/bin/nv-dotfiles"
+    install -Dm755 apps/control-center/build/nv-control-center "$pkgdir/usr/bin/nv-control-center"
+    install -Dm755 apps/sddm-gui/build/nv-sddm-gui "$pkgdir/usr/bin/nv-sddm-gui"
+    install -Dm755 apps/audio-gui/build/nv-audio-gui "$pkgdir/usr/bin/nv-audio-gui"
+    install -Dm755 apps/display-gui/build/nv-display-gui "$pkgdir/usr/bin/nv-display-gui"
+    install -Dm755 apps/wallpaper-gui/build/nv-wallpaper-gui "$pkgdir/usr/bin/nv-wallpaper-gui"
+    install -Dm755 apps/input-gui/build/nv-input-gui "$pkgdir/usr/bin/nv-input-gui"
+    install -Dm755 apps/power-gui/build/nv-power-gui "$pkgdir/usr/bin/nv-power-gui"
+    install -Dm755 apps/bluetooth-gui/build/nv-bluetooth-gui "$pkgdir/usr/bin/nv-bluetooth-gui"
+    install -Dm755 apps/network-gui/build/nv-network-gui "$pkgdir/usr/bin/nv-network-gui"
+    install -Dm755 apps/service-gui/build/nv-service-gui "$pkgdir/usr/bin/nv-service-gui"
+    install -Dm755 apps/log-gui/build/nv-log-gui "$pkgdir/usr/bin/nv-log-gui"
+    install -Dm755 apps/disk-gui/build/nv-disk-gui "$pkgdir/usr/bin/nv-disk-gui"
+    install -Dm755 apps/theme-gui/build/nv-theme-gui "$pkgdir/usr/bin/nv-theme-gui"
 
     # Install scripts
-    install -Dm755 scripts/reset-panel.sh "$pkgdir/usr/bin/naravisuals-reset-panel"
+    install -Dm755 scripts/reset-panel.sh "$pkgdir/usr/bin/nv-reset-panel"
     install -Dm755 scripts/install-all.sh "$pkgdir/usr/share/naravisuals/scripts/install-all.sh"
 
     # Install shared library
