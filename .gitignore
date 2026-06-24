@@ -6,6 +6,8 @@
 *.dll
 *.so
 *.dylib
+
+inspirations/
 lxqt-dotfiles
 nv-*-gui
 test-*-gui

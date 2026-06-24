@@ -1,0 +1,67 @@
+# Everforest theme override for labwc
+# Syntax: <key>: <value>
+
+window.border.width: 2
+window.border.color: #47524a
+window.active.border.color: #a7c082
+padding.height: 4
+
+window.active.title.bg: #47524a
+window.active.title.fg: #d3c6aa
+window.active.title.bg.color: #47524a
+window.active.label.fg: #d3c6aa
+window.active.label.text: #d3c6aa
+window.active.label.bg: #47524a
+window.active.label.bg.color: #47524a
+
+window.inactive.title.bg: #2d353b
+window.inactive.title.fg: #7a8478
+window.inactive.title.bg.color: #2d353b
+window.inactive.label.fg: #7a8478
+window.inactive.label.text: #7a8478
+window.inactive.label.bg: #2d353b
+window.inactive.label.bg.color: #2d353b
+
+window.active.handle.bg: #47524a
+window.active.handle.bg.color: #47524a
+window.inactive.handle.bg: #2d353b
+window.inactive.handle.bg.color: #2d353b
+
+menu.items.bg: #2d353b
+menu.items.fg: #d3c6aa
+menu.items.bg.color: #2d353b
+menu.title.bg: #47524a
+menu.title.fg: #d3c6aa
+menu.title.bg.color: #47524a
+menu.items.active.bg: #a7c082
+menu.items.active.fg: #2d353b
+menu.items.active.bg.color: #a7c082
+menu.separator.color: #7a8478
+menu.separator.width: 1
+menu.overlap.x: 0
+menu.overlap.y: -4
+
+osd.bg: #2d353b
+osd.fg: #d3c6aa
+osd.bg.color: #2d353b
+osd.border.color: #a7c082
+osd.border.width: 1
+osd.label.fg: #d3c6aa
+osd.label.bg: #2d353b
+osd.label.bg.color: #2d353b
+osd.window-switcher.width: 600
+osd.window-switcher.height: 400
+osd.window-switcher.padding: 8
+
+window.active.button.bg: #47524a
+window.active.button.fg: #d3c6aa
+window.active.button.bg.color: #47524a
+window.active.button.iconify.bg: #47524a
+window.active.button.iconify.fg: #dbbc7f
+window.active.button.maximize.bg: #47524a
+window.active.button.maximize.fg: #a7c082
+window.active.button.close.bg: #47524a
+window.active.button.close.fg: #e67e80
+window.inactive.button.bg: #2d353b
+window.inactive.button.fg: #7a8478
+window.inactive.button.bg.color: #2d353b

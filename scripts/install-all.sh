@@ -40,6 +40,10 @@ MODULES=(
   "features/install-compositor.sh hyprland|Hyprland|Animated tiling compositor|compositor"
   "features/install-compositor.sh sway|Sway|i3-compatible tiling|compositor"
   "features/install-compositor.sh wayfire|Wayfire|3D plugin compositor|compositor"
+  "features/install-compositor.sh niri|Niri|Scrollable tiling compositor|compositor"
+  "features/install-compositor.sh river|River|Dynamic tiling compositor|compositor"
+  "features/install-compositor.sh kwin_wayland|KWin|KDE stacking compositor|compositor"
+  "features/install-compositor.sh miriway|Miriway|Mir-based floating compositor|compositor"
 
   # Group 4: Visual resources (download order doesn't matter much)
   "themes.sh|Theme Downloader|GTK/Qt window themes|visual"
@@ -197,7 +201,7 @@ for arg in "$@"; do
       printf "Modules are grouped by dependency:\n"
       printf "  system:   repos, fontconfig, portals\n"
       printf "  tools:    clipboard, OSD, launcher, kvantum\n"
-      printf "  compositor: hyprland, sway, wayfire\n"
+      printf "  compositor: hyprland, sway, wayfire, miriway\n"
       printf "  visual:   themes, icons, cursors, fonts, wallpapers\n"
       printf "  extras:   neofetch, conky, emacs\n"
       exit 0
@@ -272,6 +276,6 @@ printf "  2. Set icons:     ${GREEN}lxqt-config-appearance${RST} → Icon Theme\
 printf "  3. Set cursor:    ${GREEN}lxqt-config-appearance${RST} → Cursor Theme\n"
 printf "  4. Set fonts:     ${GREEN}lxqt-config-appearance${RST} → Font\n"
 printf "  5. Set wallpaper: ${GREEN}bash wallpapers.sh --set <collection>${RST}\n"
-printf "  6. Reconfigure:   ${GREEN}labwc -r${RST}\n"
+printf "  6. Reconfigure:   ${GREEN}labwc -r${RST} (labwc) or restart Miriway session\n"
 
 [ "$fail_count" -eq 0 ] || exit 1

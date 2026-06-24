@@ -1,0 +1,67 @@
+// Niri Configuration for LXQt
+// Place at: ~/.config/lxqt/wayland/lxqt-niri.kdl
+// See also: niri/ subdirectory for split config files
+
+// ---- LXQt Session (launch lxqt-session and exit niri on logout) ----
+spawn-sh-at-startup "lxqt-session && niri msg action quit -s"
+
+// ---- Wallpaper ----
+spawn-sh-at-startup "swaybg -i ~/.local/share/wallpapers/origami-dark-labwc.png -m fill"
+
+// ---- Layout ----
+layout {
+    gaps 16
+    focus-ring { width 2; active-color "#81a1c1"; inactive-color "#2e3440"; }
+    shadow { on; softness 40; spread 5; color "#00000064"; }
+    center-focused-column "on-overflow"
+    default-column-width { proportion 0.5; }
+}
+
+// ---- Input ----
+input {
+    keyboard { xkb { layout "us"; options "grp:alt_shift_toggle,compose:ralt"; } }
+    touchpad { tap; natural-scroll; accel-speed 0.6; }
+}
+
+// ---- Screenshots ----
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+// ---- Binds ----
+binds {
+    Mod+T { spawn-sh "lxqt-qdbus run qterminal"; }
+    F12 { spawn-sh "qterminal -d"; }
+    Alt+Space { spawn "lxqt-runner"; }
+    Mod+P { spawn "pcmanfm-qt"; }
+    Mod+L { spawn "lxqt-leave"; }
+    Super+Shift+Escape { spawn-sh "lxqt-leave --lockscreen"; }
+
+    XF86AudioRaiseVolume { spawn-sh "lxqt-qdbus volume up"; }
+    XF86AudioLowerVolume { spawn-sh "lxqt-qdbus volume down"; }
+    XF86AudioMute { spawn-sh "lxqt-qdbus volume mute"; }
+    XF86MonBrightnessUp { spawn-sh "lxqt-config-brightness -i"; }
+    XF86MonBrightnessDown { spawn-sh "lxqt-config-brightness -d"; }
+
+    Print { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+
+    Alt+F1 { spawn-sh "lxqt-qdbus openmenu"; }
+    Mod+Shift+E { quit; }
+    Ctrl+Alt+Delete { quit; }
+}
+
+// ---- Window Rules ----
+window-rule {
+    match app-id=r#"^lxqt-.*|pavu.*|.*copyq|qarma|.*portal-lxqt.*|.*conf$"#
+    match title=r#"^Preferen.*|.*file.*|Password.*|Prop.*|Close.*|Select.*$"#
+    open-floating true
+}
+
+window-rule {
+    geometry-corner-radius 8
+    clip-to-geometry true
+}
+
+layer-rule {
+    match namespace="^wallpaper$"
+    place-within-backdrop true
+}

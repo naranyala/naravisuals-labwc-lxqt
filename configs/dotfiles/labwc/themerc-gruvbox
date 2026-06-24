@@ -1,0 +1,67 @@
+# Gruvbox Dark theme override for labwc
+# Syntax: <key>: <value>
+
+window.border.width: 2
+window.border.color: #504945
+window.active.border.color: #d79921
+padding.height: 4
+
+window.active.title.bg: #504945
+window.active.title.fg: #ebdbb2
+window.active.title.bg.color: #504945
+window.active.label.fg: #ebdbb2
+window.active.label.text: #ebdbb2
+window.active.label.bg: #504945
+window.active.label.bg.color: #504945
+
+window.inactive.title.bg: #282828
+window.inactive.title.fg: #928374
+window.inactive.title.bg.color: #282828
+window.inactive.label.fg: #928374
+window.inactive.label.text: #928374
+window.inactive.label.bg: #282828
+window.inactive.label.bg.color: #282828
+
+window.active.handle.bg: #504945
+window.active.handle.bg.color: #504945
+window.inactive.handle.bg: #282828
+window.inactive.handle.bg.color: #282828
+
+menu.items.bg: #282828
+menu.items.fg: #ebdbb2
+menu.items.bg.color: #282828
+menu.title.bg: #504945
+menu.title.fg: #ebdbb2
+menu.title.bg.color: #504945
+menu.items.active.bg: #d79921
+menu.items.active.fg: #282828
+menu.items.active.bg.color: #d79921
+menu.separator.color: #928374
+menu.separator.width: 1
+menu.overlap.x: 0
+menu.overlap.y: -4
+
+osd.bg: #282828
+osd.fg: #ebdbb2
+osd.bg.color: #282828
+osd.border.color: #d79921
+osd.border.width: 1
+osd.label.fg: #ebdbb2
+osd.label.bg: #282828
+osd.label.bg.color: #282828
+osd.window-switcher.width: 600
+osd.window-switcher.height: 400
+osd.window-switcher.padding: 8
+
+window.active.button.bg: #504945
+window.active.button.fg: #ebdbb2
+window.active.button.bg.color: #504945
+window.active.button.iconify.bg: #504945
+window.active.button.iconify.fg: #d79921
+window.active.button.maximize.bg: #504945
+window.active.button.maximize.fg: #98971a
+window.active.button.close.bg: #504945
+window.active.button.close.fg: #cc241d
+window.inactive.button.bg: #282828
+window.inactive.button.fg: #928374
+window.inactive.button.bg.color: #282828

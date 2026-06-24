@@ -17,3 +17,7 @@ add_test(NAME e2e_real_world COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE
     --launcher-gui $<TARGET_FILE:nv-launcher-gui>
     --lockscreen-gui $<TARGET_FILE:nv-lockscreen-gui>
     --screenshot-gui $<TARGET_FILE:nv-screenshot-gui>)
+
+# Miriway + LXQt integration tests
+add_test(NAME miriway_lxqt_integration
+    COMMAND Python3::Interpreter ${CMAKE_CURRENT_SOURCE_DIR}/test_miriway_lxqt.py)

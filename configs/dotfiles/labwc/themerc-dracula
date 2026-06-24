@@ -1,0 +1,67 @@
+# Dracula theme override for labwc
+# Syntax: <key>: <value>
+
+window.border.width: 2
+window.border.color: #44475a
+window.active.border.color: #bd93f9
+padding.height: 4
+
+window.active.title.bg: #44475a
+window.active.title.fg: #f8f8f2
+window.active.title.bg.color: #44475a
+window.active.label.fg: #f8f8f2
+window.active.label.text: #f8f8f2
+window.active.label.bg: #44475a
+window.active.label.bg.color: #44475a
+
+window.inactive.title.bg: #282a36
+window.inactive.title.fg: #6272a4
+window.inactive.title.bg.color: #282a36
+window.inactive.label.fg: #6272a4
+window.inactive.label.text: #6272a4
+window.inactive.label.bg: #282a36
+window.inactive.label.bg.color: #282a36
+
+window.active.handle.bg: #44475a
+window.active.handle.bg.color: #44475a
+window.inactive.handle.bg: #282a36
+window.inactive.handle.bg.color: #282a36
+
+menu.items.bg: #282a36
+menu.items.fg: #f8f8f2
+menu.items.bg.color: #282a36
+menu.title.bg: #44475a
+menu.title.fg: #f8f8f2
+menu.title.bg.color: #44475a
+menu.items.active.bg: #bd93f9
+menu.items.active.fg: #282a36
+menu.items.active.bg.color: #bd93f9
+menu.separator.color: #6272a4
+menu.separator.width: 1
+menu.overlap.x: 0
+menu.overlap.y: -4
+
+osd.bg: #282a36
+osd.fg: #f8f8f2
+osd.bg.color: #282a36
+osd.border.color: #bd93f9
+osd.border.width: 1
+osd.label.fg: #f8f8f2
+osd.label.bg: #282a36
+osd.label.bg.color: #282a36
+osd.window-switcher.width: 600
+osd.window-switcher.height: 400
+osd.window-switcher.padding: 8
+
+window.active.button.bg: #44475a
+window.active.button.fg: #f8f8f2
+window.active.button.bg.color: #44475a
+window.active.button.iconify.bg: #44475a
+window.active.button.iconify.fg: #f1fa8c
+window.active.button.maximize.bg: #44475a
+window.active.button.maximize.fg: #50fa7b
+window.active.button.close.bg: #44475a
+window.active.button.close.fg: #ff5555
+window.inactive.button.bg: #282a36
+window.inactive.button.fg: #6272a4
+window.inactive.button.bg.color: #282a36

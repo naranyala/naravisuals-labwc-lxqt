@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (Miriway)
+Comment=LXQt session using Miriway — Mir-based floating compositor for desktop and IoT shells
+Exec=startlxqtwayland miriway
+Type=Application
+DesktopNames=LXQt;Miriway;wlroots

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (KWin)
+Comment=LXQt session using KWin — KDE's full-featured stacking compositor (most features, GUI config)
+Exec=startlxqtwayland kwin_wayland
+Type=Application
+DesktopNames=LXQt;KWin;KDE

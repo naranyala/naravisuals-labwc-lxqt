@@ -17,11 +17,17 @@ declare -A COMPOSITOR_PACKAGES=(
   ["kwin_x11"]="kwin-x11:kwin-x11:kwin-x11"
   ["metacity"]="metacity:metacity:metacity"
   ["mutter"]="mutter:mutter:mutter"
+  ["weston"]="weston:weston:weston"
+  ["openbox"]="openbox:openbox:openbox"
+  # LXQt Wayland compositors
   ["labwc"]="labwc:labwc:labwc"
   ["sway"]="sway:sway:sway"
   ["wayfire"]="wayfire:wayfire:wayfire"
-  ["weston"]="weston:weston:weston"
-  ["openbox"]="openbox:openbox:openbox"
+  ["hyprland"]="hyprland:hyprland:hyprland"
+  ["niri"]="niri:niri:niri"
+  ["river"]="river:river:river"
+  ["kwin_wayland"]="kwin:kwin:kwin"
+  ["miriway"]=":::"
 )
 
 # Resolve the correct package name for the current distro
@@ -88,8 +94,10 @@ fi
 selected="${COMPOSITORS[$choice]}"
 
 echo "Stopping existing compositor..."
-for comp in xcompmgr compton picom kwin_x11 metacity mutter labwc sway wayfire weston; do
-  pkill -x "$comp" 2>/dev/null || true
+for comp in xcompmgr compton picom kwin_x11 metacity mutter labwc sway wayfire \
+             weston hyprland niri river kwin_wayland kwin_wrapper \
+             miriway miriway-shell; do
+    pkill -x "$comp" 2>/dev/null || true
 done
 
 echo "Stopping LXQt services..."
@@ -98,18 +106,26 @@ for svc in lxqt-session lxqt-panel lxqt-globalkeysd lxqt-notificationd lxqt-powe
 done
 
 if [[ "$selected" == "none" ]]; then
-  echo "No compositor will be started."
+    echo "No compositor will be started."
+elif [[ "$selected" == "miriway" ]]; then
+    echo "Starting $selected..."
+    if [[ -z "$XDG_CONFIG_HOME" ]]; then
+        export XDG_CONFIG_HOME="$HOME/.config"
+    fi
+    if [[ ! -f "$XDG_CONFIG_HOME/miriway-shell.config" ]]; then
+        cp "$SCRIPT_DIR/../lxqt/lxqt-wayland-session/configurations/lxqt-miriway.config" \
+           "$XDG_CONFIG_HOME/miriway-shell.config" 2>/dev/null || true
+    fi
+    nohup miriway-session >/dev/null 2>&1 &
 else
-  echo "Starting $selected..."
-  nohup "$selected" >/dev/null 2>&1 &
+    echo "Starting $selected..."
+    nohup "$selected" >/dev/null 2>&1 &
 fi
 
 echo "Restarting LXQt services..."
-nohup lxqt-session >/dev/null 2>&1 &
-nohup lxqt-panel >/dev/null 2>&1 &
-nohup lxqt-globalkeysd >/dev/null 2>&1 &
-nohup lxqt-notificationd >/dev/null 2>&1 &
-nohup lxqt-powermanagement >/dev/null 2>&1 &
+for svc in lxqt-session lxqt-panel lxqt-globalkeysd lxqt-notificationd lxqt-powermanagement; do
+    nohup "$svc" >/dev/null 2>&1 &
+done
 
 echo ""
 echo "Switched to $selected and reloaded LXQt."

@@ -24,6 +24,7 @@
 #include <QHeaderView>
 #include <QComboBox>
 #include <QMimeDatabase>
+#include <QtConcurrent/QtConcurrentRun>
 
 // ============================================================
 // Custom file browser dialog — replaces QFileDialog entirely
@@ -90,7 +91,7 @@ public:
             m_model->setNameFilterDisables(false);
         }
 
-        m_model->setRootPath(QDir::rootPath());
+        m_model->setRootPath(startPath.isEmpty() ? QDir::homePath() : startPath);
 
         m_tree = new QTreeView();
         m_tree->setModel(m_model);
@@ -308,23 +309,32 @@ private slots:
     void updatePreview(const QString &path) {
         if (!m_previewLabel) return;
 
-        QPixmap pix(path);
-        if (!pix.isNull()) {
-            m_previewLabel->setPixmap(pix.scaled(
-                m_previewLabel->size() - QSize(8, 8),
-                Qt::KeepAspectRatio,
-                Qt::SmoothTransformation
-            ));
-        } else {
-            m_previewLabel->setText("Cannot preview");
-            m_previewLabel->setPixmap(QPixmap());
-        }
+        m_previewLabel->setText("Loading preview...");
+        m_previewLabel->setPixmap(QPixmap());
 
-        if (m_fileNameLabel) {
-            QFileInfo fi(path);
-            m_fileNameLabel->setText(fi.fileName() + "\n" +
-                QString::number(pix.width()) + " x " + QString::number(pix.height()));
-        }
+        QLabel *previewPtr = m_previewLabel;
+        QLabel *fileNamePtr = m_fileNameLabel;
+        QFuture<void> future = QtConcurrent::run([path, previewPtr, fileNamePtr]() {
+            QPixmap pix(path);
+            QMetaObject::invokeMethod(previewPtr, [pix, previewPtr, fileNamePtr, path]() {
+                if (!pix.isNull()) {
+                    previewPtr->setPixmap(pix.scaled(
+                        previewPtr->size() - QSize(8, 8),
+                        Qt::KeepAspectRatio,
+                        Qt::SmoothTransformation
+                    ));
+                    if (fileNamePtr) {
+                        QFileInfo fi(path);
+                        fileNamePtr->setText(fi.fileName() + "\n" +
+                            QString::number(pix.width()) + " x " + QString::number(pix.height()));
+                    }
+                } else {
+                    previewPtr->setText("Cannot preview");
+                    previewPtr->setPixmap(QPixmap());
+                }
+            }, Qt::QueuedConnection);
+        });
+        Q_UNUSED(future);
     }
 
 private:
@@ -545,14 +555,9 @@ private slots:
             auto *thumb = new QLabel();
             thumb->setFixedSize(thumbSize, thumbSize);
             thumb->setScaledContents(true);
-            QPixmap pix(wallpapers[i].path);
-            if (!pix.isNull()) {
-                thumb->setPixmap(pix.scaled(thumbSize, thumbSize, Qt::KeepAspectRatio, Qt::SmoothTransformation));
-            } else {
-                thumb->setText("No preview");
-                thumb->setStyleSheet("color: #a6adc8; background-color: #313244;");
-                thumb->setAlignment(Qt::AlignCenter);
-            }
+            thumb->setText("Loading...");
+            thumb->setStyleSheet("color: #585b70; background-color: #11111b;");
+            thumb->setAlignment(Qt::AlignCenter);
             cardLayout->addWidget(thumb);
 
             auto *nameLabel = new QLabel(wallpapers[i].name);
@@ -575,6 +580,26 @@ private slots:
             int row = i / cols;
             int col = i % cols;
             gridLayout->addWidget(card, row, col);
+
+            // Load thumbnail asynchronously
+            QString imgPath = wallpapers[i].path;
+            QLabel *thumbPtr = thumb;
+            QFuture<void> future = QtConcurrent::run([imgPath, thumbPtr, thumbSize]() {
+                QPixmap pix(imgPath);
+                if (!pix.isNull()) {
+                    QPixmap scaled = pix.scaled(thumbSize, thumbSize, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                    QMetaObject::invokeMethod(thumbPtr, [thumbPtr, scaled]() {
+                        thumbPtr->setPixmap(scaled);
+                    }, Qt::QueuedConnection);
+                } else {
+                    QMetaObject::invokeMethod(thumbPtr, [thumbPtr]() {
+                        thumbPtr->setText("No preview");
+                        thumbPtr->setStyleSheet("color: #a6adc8; background-color: #313244;");
+                        thumbPtr->setAlignment(Qt::AlignCenter);
+                    }, Qt::QueuedConnection);
+                }
+            });
+            Q_UNUSED(future);
         }
     }
 

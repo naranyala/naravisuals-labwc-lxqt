@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (Niri)
+Comment=LXQt session using Niri — scrollable-tiling compositor
+Exec=startlxqtwayland niri
+Type=Application
+DesktopNames=LXQt;niri;wlroots

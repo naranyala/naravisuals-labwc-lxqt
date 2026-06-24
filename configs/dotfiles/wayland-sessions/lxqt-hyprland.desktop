@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (Hyprland)
+Comment=LXQt session using Hyprland — animated dynamic tiling compositor
+Exec=startlxqtwayland Hyprland
+Type=Application
+DesktopNames=LXQt;Hyprland;wlroots

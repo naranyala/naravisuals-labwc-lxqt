@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (River)
+Comment=LXQt session using River — dynamic tiling compositor
+Exec=startlxqtwayland river
+Type=Application
+DesktopNames=LXQt;river;wlroots

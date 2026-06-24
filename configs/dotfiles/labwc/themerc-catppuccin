@@ -1,0 +1,67 @@
+# Catppuccin Mocha theme override for labwc
+# Syntax: <key>: <value>
+
+window.border.width: 2
+window.border.color: #45475a
+window.active.border.color: #cba6f7
+padding.height: 4
+
+window.active.title.bg: #45475a
+window.active.title.fg: #cdd6f4
+window.active.title.bg.color: #45475a
+window.active.label.fg: #cdd6f4
+window.active.label.text: #cdd6f4
+window.active.label.bg: #45475a
+window.active.label.bg.color: #45475a
+
+window.inactive.title.bg: #1e1e2e
+window.inactive.title.fg: #6c7086
+window.inactive.title.bg.color: #1e1e2e
+window.inactive.label.fg: #6c7086
+window.inactive.label.text: #6c7086
+window.inactive.label.bg: #1e1e2e
+window.inactive.label.bg.color: #1e1e2e
+
+window.active.handle.bg: #45475a
+window.active.handle.bg.color: #45475a
+window.inactive.handle.bg: #1e1e2e
+window.inactive.handle.bg.color: #1e1e2e
+
+menu.items.bg: #1e1e2e
+menu.items.fg: #cdd6f4
+menu.items.bg.color: #1e1e2e
+menu.title.bg: #45475a
+menu.title.fg: #cdd6f4
+menu.title.bg.color: #45475a
+menu.items.active.bg: #cba6f7
+menu.items.active.fg: #1e1e2e
+menu.items.active.bg.color: #cba6f7
+menu.separator.color: #6c7086
+menu.separator.width: 1
+menu.overlap.x: 0
+menu.overlap.y: -4
+
+osd.bg: #1e1e2e
+osd.fg: #cdd6f4
+osd.bg.color: #1e1e2e
+osd.border.color: #cba6f7
+osd.border.width: 1
+osd.label.fg: #cdd6f4
+osd.label.bg: #1e1e2e
+osd.label.bg.color: #1e1e2e
+osd.window-switcher.width: 600
+osd.window-switcher.height: 400
+osd.window-switcher.padding: 8
+
+window.active.button.bg: #45475a
+window.active.button.fg: #cdd6f4
+window.active.button.bg.color: #45475a
+window.active.button.iconify.bg: #45475a
+window.active.button.iconify.fg: #f9e2af
+window.active.button.maximize.bg: #45475a
+window.active.button.maximize.fg: #a6e3a1
+window.active.button.close.bg: #45475a
+window.active.button.close.fg: #f38ba8
+window.inactive.button.bg: #1e1e2e
+window.inactive.button.fg: #6c7086
+window.inactive.button.bg.color: #1e1e2e

@@ -24,3 +24,12 @@
 - [x] **Packaging** — `PKGBUILD` for Arch AUR (depends, optdepends, build, package functions), `install.sh` one-command installer (full/minimal/select/dry-run modes)
 - [x] **Dotfiles manifest** — Expanded to 33 entries (added QSS, panel-stock, 3 compositor configs)
 - [x] **Orchestrator** — Expanded to 20 modules (added Kvantum, wallust, Hyprland, Sway, Wayfire)
+
+---
+
+## Phase 3 — Global Theme System ✅
+
+- [x] **Theme profiles** — 6 curated profiles in `configs/themes/`: nord, dracula, catppuccin, tokyo-night, gruvbox, everforest. Each defines GTK, WM, Qt, icons, cursor, fonts, panel, and color scheme.
+- [x] **Theme applier** — `apply-theme.sh` applies all components atomically from a profile. Supports `--list`, `--preview`, `--current`, `--restore`, interactive mode. Creates backups before applying.
+- [x] **Window themercs** — 5 new labwc themerc files: dracula, catppuccin, tokyo-night, gruvbox, everforest. Each matches the profile's color scheme.
+- [x] **GUI integration** — GlobalThemesTab added to Theme Manager (first tab). Shows theme list with color swatches, component summary, preview popup, and Apply button that runs apply-theme.sh.

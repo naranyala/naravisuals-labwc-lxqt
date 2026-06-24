@@ -24,6 +24,8 @@
 #include <QFrame>
 #include <QListWidget>
 #include <QStringListModel>
+#include <QSplitter>
+#include <QMap>
 #include <QFontDialog>
 #include <QInputDialog>
 #include <QFileInfo>
@@ -1358,7 +1360,432 @@ private:
 };
 
 // ============================================================
-// Tab 7: Health Check
+// Tab 7: Global Themes
+// ============================================================
+class GlobalThemesTab : public QWidget {
+    Q_OBJECT
+public:
+    explicit GlobalThemesTab(QStatusBar *sb, QWidget *parent = nullptr)
+        : QWidget(parent), statusBar(sb) {
+        setupUI();
+        scanThemes();
+        loadCurrentTheme();
+    }
+
+signals:
+    void changed();
+
+private slots:
+    void scanThemes() {
+        themeList->clear();
+        themeCards.clear();
+
+        // Scan configs/themes/ directory
+        QString themesDir = QApplication::applicationDirPath() + "/../../../configs/themes";
+        if (!QDir(themesDir).exists()) {
+            // Try relative to common install paths
+            themesDir = QDir::homePath() + "/.local/share/naravisuals/configs/themes";
+        }
+        if (!QDir(themesDir).exists()) {
+            themesDir = QApplication::applicationDirPath() + "/configs/themes";
+        }
+
+        QDir dir(themesDir);
+        if (!dir.exists()) {
+            statusBar->showMessage("Theme directory not found: " + themesDir, 5000);
+            return;
+        }
+
+        QStringList files = dir.entryList(QStringList() << "*.conf", QDir::Files, QDir::Name);
+        for (const auto &file : files) {
+            QString name = file.chopped(5); // remove .conf
+            ThemeCard card;
+            card.name = name;
+            card.filePath = dir.absoluteFilePath(file);
+            parseThemeProfile(card);
+            themeCards.append(card);
+
+            auto *item = new QListWidgetItem();
+            item->setData(Qt::UserRole, themeCards.size() - 1);
+            item->setSizeHint(QSize(0, 72));
+            themeList->addItem(item);
+        }
+
+        statusBar->showMessage(QString("Found %1 global themes").arg(themeCards.size()), 3000);
+    }
+
+    void loadCurrentTheme() {
+        QString stateFile = QDir::homePath() + "/.config/lxqt-rice/current-theme";
+        QFile f(stateFile);
+        if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString current = QString::fromUtf8(f.readAll()).trimmed();
+            f.close();
+            currentThemeLabel->setText("Active: " + current);
+            // Select in list
+            for (int i = 0; i < themeCards.size(); i++) {
+                if (themeCards[i].name == current) {
+                    themeList->setCurrentRow(i);
+                    showThemeDetails(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    void onThemeSelected(int row) {
+        if (row >= 0 && row < themeCards.size()) {
+            showThemeDetails(row);
+        }
+    }
+
+    void applySelectedTheme() {
+        int row = themeList->currentRow();
+        if (row < 0 || row >= themeCards.size()) {
+            QMessageBox::information(this, "No Selection", "Select a theme from the list first.");
+            return;
+        }
+
+        const ThemeCard &card = themeCards[row];
+
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, "Apply Theme",
+            "Apply global theme \"" + card.name + "\"?\n\n"
+            "This will:\n"
+            "  - Set GTK theme: " + card.gtkTheme + "\n"
+            "  - Set WM theme: " + card.wmTheme + "\n"
+            "  - Set Qt style: " + card.qtStyle + "\n"
+            "  - Set icons: " + card.iconTheme + "\n"
+            "  - Set cursor: " + card.cursorTheme + "\n"
+            "  - Update panel opacity and colors\n\n"
+            "A backup of current configs will be created.",
+            QMessageBox::Yes | QMessageBox::No);
+
+        if (reply != QMessageBox::Yes) return;
+
+        // Run apply-theme.sh
+        QProcess proc;
+        QString script = QApplication::applicationDirPath() + "/../../../apply-theme.sh";
+        if (!QFile::exists(script)) {
+            script = QDir::homePath() + "/.local/share/naravisuals/apply-theme.sh";
+        }
+
+        if (!QFile::exists(script)) {
+            QMessageBox::critical(this, "Error", "apply-theme.sh not found.\n"
+                "Expected at: " + QApplication::applicationDirPath() + "/../../../apply-theme.sh");
+            return;
+        }
+
+        proc.start("bash", {script, card.name});
+        proc.waitForFinished(10000);
+
+        if (proc.exitCode() == 0) {
+            QString output = QString::fromUtf8(proc.readAllStandardOutput());
+            currentThemeLabel->setText("Active: " + card.name);
+            statusBar->showMessage("Theme \"" + card.name + "\" applied. Restart labwc for full effect.", 5000);
+            emit changed();
+        } else {
+            QString err = QString::fromUtf8(proc.readAllStandardError());
+            QMessageBox::warning(this, "Theme Apply Failed",
+                "Failed to apply theme:\n" + err);
+        }
+    }
+
+    void previewTheme() {
+        int row = themeList->currentRow();
+        if (row < 0 || row >= themeCards.size()) return;
+
+        const ThemeCard &card = themeCards[row];
+
+        QString info;
+        info += "<h3 style=\"color:#89b4fa\">" + card.metaName + "</h3>";
+        info += "<p style=\"color:#a6adc8\">" + card.description + "</p>";
+        info += "<table style=\"color:#cdd6f4;font-size:13px\">";
+        info += "<tr><td><b>GTK Theme:</b></td><td>" + card.gtkTheme + "</td></tr>";
+        info += "<tr><td><b>WM Theme:</b></td><td>" + card.wmTheme + "</td></tr>";
+        info += "<tr><td><b>Qt Style:</b></td><td>" + card.qtStyle + "</td></tr>";
+        info += "<tr><td><b>Qt Palette:</b></td><td>" + card.qtPalette + "</td></tr>";
+        info += "<tr><td><b>Icons:</b></td><td>" + card.iconTheme + "</td></tr>";
+        info += "<tr><td><b>Cursor:</b></td><td>" + card.cursorTheme + "</td></tr>";
+        info += "<tr><td><b>UI Font:</b></td><td>" + card.uiFont + "</td></tr>";
+        info += "<tr><td><b>Panel Opacity:</b></td><td>" + card.panelOpacity + "%</td></tr>";
+        info += "</table>";
+        info += "<br><b>Color Scheme:</b>";
+        info += "<table style=\"font-size:12px\">";
+        info += "<tr><td>Active BG:</td><td style=\"background:" + card.activeBg + ";width:40px;height:20px\"></td><td>" + card.activeBg + "</td></tr>";
+        info += "<tr><td>Active FG:</td><td style=\"background:" + card.activeFg + ";width:40px;height:20px\"></td><td>" + card.activeFg + "</td></tr>";
+        info += "<tr><td>Inactive BG:</td><td style=\"background:" + card.inactiveBg + ";width:40px;height:20px\"></td><td>" + card.inactiveBg + "</td></tr>";
+        info += "<tr><td>Accent:</td><td style=\"background:" + card.accent + ";width:40px;height:20px\"></td><td>" + card.accent + "</td></tr>";
+        info += "<tr><td>Close btn:</td><td style=\"background:" + card.closeBtn + ";width:40px;height:20px\"></td><td>" + card.closeBtn + "</td></tr>";
+        info += "<tr><td>Max btn:</td><td style=\"background:" + card.maxBtn + ";width:40px;height:20px\"></td><td>" + card.maxBtn + "</td></tr>";
+        info += "</table>";
+
+        previewLabel->setText(info);
+        previewLabel->show();
+    }
+
+private:
+    struct ThemeCard {
+        QString name, filePath;
+        QString metaName, description, accent;
+        QString gtkTheme, wmTheme, qtStyle, qtPalette;
+        QString iconTheme, cursorTheme, cursorSize;
+        QString uiFont, monoFont;
+        QString panelOpacity, panelBg;
+        QString activeBg, activeFg, inactiveBg, inactiveFg;
+        QString accent2, borderActive, borderInactive;
+        QString closeBtn, maxBtn, minBtn;
+    };
+
+    void parseThemeProfile(ThemeCard &card) {
+        QFile f(card.filePath);
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return;
+        QString content = QString(f.readAll());
+        f.close();
+
+        QString section;
+        QMap<QString, QString> data;
+
+        for (const auto &line : content.split('\n')) {
+            QString l = line.trimmed();
+            if (l.isEmpty() || l.startsWith('#')) continue;
+
+            QRegularExpression secRe("^\\[(\\w+)\\]$");
+            QRegularExpressionMatch secM = secRe.match(l);
+            if (secM.hasMatch()) {
+                section = secM.captured(1);
+                continue;
+            }
+
+            QRegularExpression kvRe("^(\\w+)=(.*)$");
+            QRegularExpressionMatch kvM = kvRe.match(l);
+            if (kvM.hasMatch()) {
+                data[section + "." + kvM.captured(1)] = kvM.captured(2).trimmed();
+            }
+        };
+
+        auto get = [&](const QString &key) -> QString {
+            return data.value(key, "");
+        };
+
+        card.metaName = get("meta.name");
+        card.description = get("meta.description");
+        card.accent = get("meta.accent");
+        card.gtkTheme = get("gtk.theme");
+        card.wmTheme = get("wm.theme");
+        card.qtStyle = get("qt.style");
+        card.qtPalette = get("qt.palette");
+        card.iconTheme = get("icons.theme");
+        card.cursorTheme = get("cursor.theme");
+        card.cursorSize = get("cursor.size");
+        card.uiFont = get("fonts.ui");
+        card.monoFont = get("fonts.mono");
+        card.panelOpacity = get("panel.opacity");
+        card.panelBg = get("panel.background");
+        card.activeBg = get("colors.active_bg");
+        card.activeFg = get("colors.active_fg");
+        card.inactiveBg = get("colors.inactive_bg");
+        card.inactiveFg = get("colors.inactive_fg");
+        card.accent2 = get("meta.accent");
+        card.borderActive = get("colors.border_active");
+        card.borderInactive = get("colors.border_inactive");
+        card.closeBtn = get("colors.button_close");
+        card.maxBtn = get("colors.button_maximize");
+        card.minBtn = get("colors.button_iconify");
+    }
+
+    void showThemeDetails(int idx) {
+        if (idx < 0 || idx >= themeCards.size()) return;
+        const ThemeCard &card = themeCards[idx];
+
+        detailNameLabel->setText(card.metaName);
+        detailDescLabel->setText(card.description);
+
+        // Color swatches
+        auto setSwatch = [](QLabel *label, const QString &color) {
+            label->setStyleSheet(QString(
+                "background-color: %1; border-radius: 4px; border: 1px solid #45475a;").arg(color));
+            label->setToolTip(color);
+        };
+        setSwatch(activeBgSwatch, card.activeBg);
+        setSwatch(activeFgSwatch, card.activeFg);
+        setSwatch(inactiveBgSwatch, card.inactiveBg);
+        setSwatch(inactiveFgSwatch, card.inactiveFg);
+        setSwatch(accentSwatch, card.accent);
+        setSwatch(closeSwatch, card.closeBtn);
+        setSwatch(maxSwatch, card.maxBtn);
+        setSwatch(minSwatch, card.minBtn);
+
+        // Component summary
+        componentLabel->setText(QString(
+            "GTK: %1 | WM: %2 | Qt: %3 | Icons: %4 | Cursor: %5")
+            .arg(card.gtkTheme, card.wmTheme, card.qtStyle, card.iconTheme, card.cursorTheme));
+
+        detailWidget->show();
+    }
+
+    void setupUI() {
+        auto *layout = new QVBoxLayout(this);
+        layout->setSpacing(12);
+        layout->setContentsMargins(16, 16, 16, 16);
+
+        auto *header = new QLabel("One-click global themes — applies GTK, WM, Qt, icons, cursor, panel, and fonts");
+        header->setStyleSheet("font-size: 14px; color: #a6adc8;");
+        layout->addWidget(header);
+
+        // Current theme indicator
+        currentThemeLabel = new QLabel("Active: none");
+        currentThemeLabel->setStyleSheet(
+            "background-color: #313244; color: #a6e3a1; padding: 8px 14px; "
+            "border-radius: 6px; font-weight: bold;");
+        layout->addWidget(currentThemeLabel);
+
+        // Main split: list on left, details on right
+        auto *splitter = new QSplitter(Qt::Horizontal);
+
+        // Left: theme list
+        auto *leftWidget = new QWidget();
+        auto *leftLayout = new QVBoxLayout(leftWidget);
+        leftLayout->setContentsMargins(0, 0, 0, 0);
+
+        themeList = new QListWidget();
+        themeList->setStyleSheet(
+            "QListWidget { background-color: #181825; color: #cdd6f4; border: 1px solid #313244; "
+            "border-radius: 6px; font-size: 14px; }"
+            "QListWidget::item { padding: 10px; border-bottom: 1px solid #313244; }"
+            "QListWidget::item:selected { background-color: #313244; color: #89b4fa; font-weight: bold; }"
+            "QListWidget::item:hover { background-color: #292a3a; }");
+        connect(themeList, &QListWidget::currentRowChanged, this, &GlobalThemesTab::onThemeSelected);
+        leftLayout->addWidget(themeList);
+
+        auto *btnRow = new QHBoxLayout();
+        btnRow->setSpacing(8);
+
+        auto *refreshBtn = new QPushButton("Refresh");
+        refreshBtn->setMinimumHeight(36);
+        connect(refreshBtn, &QPushButton::clicked, this, &GlobalThemesTab::scanThemes);
+        btnRow->addWidget(refreshBtn);
+
+        btnRow->addStretch();
+        leftLayout->addLayout(btnRow);
+
+        splitter->addWidget(leftWidget);
+
+        // Right: details panel
+        auto *rightWidget = new QWidget();
+        auto *rightLayout = new QVBoxLayout(rightWidget);
+        rightLayout->setContentsMargins(8, 0, 0, 0);
+
+        detailWidget = new QWidget();
+        auto *detailLayout = new QVBoxLayout(detailWidget);
+        detailLayout->setContentsMargins(0, 0, 0, 0);
+        detailLayout->setSpacing(10);
+
+        detailNameLabel = new QLabel();
+        detailNameLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #cdd6f4;");
+        detailLayout->addWidget(detailNameLabel);
+
+        detailDescLabel = new QLabel();
+        detailDescLabel->setStyleSheet("font-size: 13px; color: #a6adc8; font-style: italic;");
+        detailDescLabel->setWordWrap(true);
+        detailLayout->addWidget(detailDescLabel);
+
+        // Color swatches
+        auto *colorGroup = new QGroupBox("Color Palette");
+        colorGroup->setStyleSheet(
+            "QGroupBox { color: #89b4fa; font-weight: bold; font-size: 13px; "
+            "border: 1px solid #45475a; border-radius: 6px; margin-top: 8px; padding-top: 16px; }"
+            "QGroupBox::title { subcontrol-origin: margin; left: 10px; padding: 0 4px; }");
+        auto *colorGrid = new QGridLayout(colorGroup);
+        colorGrid->setSpacing(6);
+
+        auto addSwatch = [&](int row, int col, const QString &name, QLabel *&swatch) {
+            auto *label = new QLabel(name);
+            label->setStyleSheet("color: #a6adc8; font-size: 11px;");
+            colorGrid->addWidget(label, row * 2, col);
+            swatch = new QLabel();
+            swatch->setFixedSize(36, 24);
+            swatch->setStyleSheet("background-color: #313244; border-radius: 4px;");
+            colorGrid->addWidget(swatch, row * 2 + 1, col);
+        };
+
+        addSwatch(0, 0, "Active BG", activeBgSwatch);
+        addSwatch(0, 1, "Active FG", activeFgSwatch);
+        addSwatch(0, 2, "Inactive BG", inactiveBgSwatch);
+        addSwatch(0, 3, "Inactive FG", inactiveFgSwatch);
+        addSwatch(1, 0, "Accent", accentSwatch);
+        addSwatch(1, 1, "Close", closeSwatch);
+        addSwatch(1, 2, "Maximize", maxSwatch);
+        addSwatch(1, 3, "Minimize", minSwatch);
+
+        detailLayout->addWidget(colorGroup);
+
+        // Component summary
+        componentLabel = new QLabel();
+        componentLabel->setStyleSheet(
+            "background-color: #181825; color: #a6adc8; padding: 8px; "
+            "border-radius: 4px; font-size: 12px;");
+        componentLabel->setWordWrap(true);
+        detailLayout->addWidget(componentLabel);
+
+        // Action buttons
+        auto *actionRow = new QHBoxLayout();
+        actionRow->setSpacing(8);
+
+        auto *applyBtn = new QPushButton("Apply Theme");
+        applyBtn->setMinimumHeight(40);
+        applyBtn->setStyleSheet(
+            "QPushButton { background-color: #a6e3a1; color: #1e1e2e; border-radius: 6px; "
+            "padding: 10px 20px; font-weight: bold; font-size: 14px; border: none; }"
+            "QPushButton:hover { background-color: #b4f9b8; }");
+        connect(applyBtn, &QPushButton::clicked, this, &GlobalThemesTab::applySelectedTheme);
+        actionRow->addWidget(applyBtn);
+
+        auto *previewBtn = new QPushButton("Preview");
+        previewBtn->setMinimumHeight(40);
+        connect(previewBtn, &QPushButton::clicked, this, &GlobalThemesTab::previewTheme);
+        actionRow->addWidget(previewBtn);
+
+        actionRow->addStretch();
+        detailLayout->addLayout(actionRow);
+
+        rightLayout->addWidget(detailWidget);
+
+        // Preview area (hidden by default)
+        previewLabel = new QLabel();
+        previewLabel->setStyleSheet(
+            "background-color: #181825; border: 1px solid #313244; border-radius: 6px; "
+            "padding: 12px; color: #cdd6f4;");
+        previewLabel->setWordWrap(true);
+        previewLabel->setTextFormat(Qt::RichText);
+        previewLabel->hide();
+        rightLayout->addWidget(previewLabel);
+
+        rightLayout->addStretch();
+        splitter->addWidget(rightWidget);
+
+        splitter->setSizes({300, 500});
+        layout->addWidget(splitter);
+
+        detailWidget->hide();
+    }
+
+    QStatusBar *statusBar;
+    QListWidget *themeList;
+    QList<ThemeCard> themeCards;
+    QLabel *currentThemeLabel;
+    QWidget *detailWidget;
+    QLabel *detailNameLabel;
+    QLabel *detailDescLabel;
+    QLabel *activeBgSwatch, *activeFgSwatch;
+    QLabel *inactiveBgSwatch, *inactiveFgSwatch;
+    QLabel *accentSwatch;
+    QLabel *closeSwatch, *maxSwatch, *minSwatch;
+    QLabel *componentLabel;
+    QLabel *previewLabel;
+};
+
+// ============================================================
+// Tab 8: Health Check
 // ============================================================
 class HealthTab : public QWidget {
     Q_OBJECT
@@ -1434,8 +1861,10 @@ public:
         iconTab = new IconCursorTab(statusBar());
         panelTab = new PanelTab(statusBar());
         fontTab = new FontThemeTab(statusBar());
+        globalTab = new GlobalThemesTab(statusBar());
         healthTab = new HealthTab();
 
+        tabs->addTab(globalTab, "Global Themes");
         tabs->addTab(wmTab, "Window Decorations");
         tabs->addTab(qtTab, "Qt Theme");
         tabs->addTab(gtkTab, "GTK Theme");
@@ -1489,6 +1918,7 @@ private:
     IconCursorTab *iconTab;
     PanelTab *panelTab;
     FontThemeTab *fontTab;
+    GlobalThemesTab *globalTab;
     HealthTab *healthTab;
 };
 

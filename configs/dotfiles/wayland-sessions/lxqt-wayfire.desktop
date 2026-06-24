@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (Wayfire)
+Comment=LXQt session using Wayfire — 3D plugin-based stacking compositor (animations, effects)
+Exec=startlxqtwayland wayfire
+Type=Application
+DesktopNames=LXQt;Wayfire;wlroots

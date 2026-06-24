@@ -1,0 +1,57 @@
+#!/bin/sh
+# River Configuration for LXQt
+# Place at: ~/.config/lxqt/wayland/lxqt-river-init
+
+# ---- LXQt Session (launch lxqt-session and exit river on logout) ----
+riverctl spawn "lxqt-session && riverctl exit"
+
+# ---- Wallpaper ----
+riverctl spawn "swaybg -i ~/.local/share/wallpapers/origami-dark-labwc.png -m fill"
+
+# ---- Input ----
+riverctl keyboard-layout us
+
+# ---- LXQt Keybinds ----
+riverctl map normal Super+Shift Return spawn "lxqt-qdbus run qterminal"
+riverctl map normal Super P spawn "pcmanfm-qt"
+riverctl map normal None F12 spawn "qterminal -d"
+riverctl map normal Alt Space spawn "lxqt-runner"
+riverctl map normal None Print spawn "lxqt-qdbus run screengrab"
+riverctl map normal Super+Shift Escape spawn "lxqt-leave --lockscreen"
+riverctl map normal None XF86PowerOff spawn "lxqt-leave"
+
+# ---- Volume ----
+riverctl map normal None XF86AudioRaiseVolume spawn "lxqt-qdbus volume up"
+riverctl map normal None XF86AudioLowerVolume spawn "lxqt-qdbus volume down"
+riverctl map normal None XF86AudioMute spawn "lxqt-qdbus volume mute"
+
+# ---- Brightness ----
+riverctl map normal None XF86MonBrightnessUp spawn "lxqt-config-brightness -i"
+riverctl map normal None XF86MonBrightnessDown spawn "lxqt-config-brightness -d"
+
+# ---- Window management ----
+riverctl map normal Super Q close
+riverctl map normal Super J focus-view next
+riverctl map normal Super K focus-view previous
+riverctl map normal Super Return zoom
+riverctl map normal Super Space toggle-float
+riverctl map normal Super F toggle-fullscreen
+
+# ---- Tags/Workspaces ----
+for i in $(seq 1 9); do
+    tags=$((1 << ($i - 1)))
+    riverctl map normal Super $i set-focused-tags $tags
+    riverctl map normal Super+Shift $i set-view-tags $tags
+done
+
+# ---- Layout ----
+riverctl default-layout rivertile
+rivertile -view-padding 6 -outer-padding 6 &
+
+# ---- Colors ----
+riverctl background-color 0x2e3440
+riverctl border-color-focused 0x81a1c1
+riverctl border-color-unfocused 0x3b4252
+
+# ---- Rules ----
+riverctl rule-add -app-id 'lxqt*' -title '*' float

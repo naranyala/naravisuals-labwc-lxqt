@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LXQt (Sway)
+Comment=LXQt session using Sway — i3-compatible tiling compositor
+Exec=startlxqtwayland sway
+Type=Application
+DesktopNames=LXQt;Sway;wlroots

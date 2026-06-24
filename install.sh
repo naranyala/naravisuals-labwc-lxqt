@@ -162,15 +162,18 @@ if ! step_done "$step_name"; then
     log_step "Installing system files"
     if [ "$DRY_RUN" != true ]; then
         sys_fail=0
-        if [ -f "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/lxqt-labwc.desktop" ]; then
-            if sudo cp "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/lxqt-labwc.desktop" \
-                /usr/share/wayland-sessions/ 2>>"$LOG_FILE"; then
-                log_ok "Installed wayland session"
-            else
-                log_warn "Could not install wayland session (sudo required)"
-                sys_fail=$((sys_fail + 1))
+        for desktop in lxqt-labwc lxqt-wayfire lxqt-kwin lxqt-hyprland \
+                       lxqt-sway lxqt-niri lxqt-river lxqt-miriway; do
+            if [ -f "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/$desktop.desktop" ]; then
+                if sudo cp "$SCRIPT_DIR/configs/dotfiles/wayland-sessions/$desktop.desktop" \
+                    /usr/share/wayland-sessions/ 2>>"$LOG_FILE"; then
+                    log_ok "Installed $desktop.desktop"
+                else
+                    log_warn "Could not install $desktop.desktop (sudo required)"
+                    sys_fail=$((sys_fail + 1))
+                fi
             fi
-        fi
+        done
         if [ -f "$SCRIPT_DIR/configs/dotfiles/sddm/lxqt-labwc.conf" ]; then
             if sudo mkdir -p /etc/sddm.conf.d/ 2>/dev/null && \
                sudo cp "$SCRIPT_DIR/configs/dotfiles/sddm/lxqt-labwc.conf" \
@@ -263,7 +266,15 @@ step_done "install-features"    && printf "  [done] Feature modules\n"          
 step_done "build-control-center" && printf "  [done] Control Center\n"           || printf "  [--] Control Center\n"
 
 printf "\n${BOLD}Next steps:${RST}\n"
-printf "  1. Log out and select 'LXQt (labwc)' from SDDM\n"
+printf "  1. Log out and select your LXQt compositor session from SDDM:\n"
+printf "     ${GREEN}LXQt (Labwc)${RST}    — stacking, Openbox-for-Wayland\n"
+printf "     ${GREEN}LXQt (Wayfire)${RST}   — stacking, 3D animations/effects\n"
+printf "     ${GREEN}LXQt (KWin)${RST}     — stacking, KDE compositor (most features)\n"
+printf "     ${GREEN}LXQt (Miriway)${RST}   — stacking, Mir-based (default)\n"
+printf "     ${GREEN}LXQt (Hyprland)${RST}  — tiling, animated\n"
+printf "     ${GREEN}LXQt (Sway)${RST}     — tiling, i3-compatible\n"
+printf "     ${GREEN}LXQt (Niri)${RST}     — tiling, scrollable\n"
+printf "     ${GREEN}LXQt (River)${RST}    — tiling, dynamic\n"
 printf "  2. Run: ${GREEN}bash scripts/install-all.sh --select${RST} for additional themes\n"
 printf "\n${BOLD}Troubleshooting:${RST}\n"
 printf "  - View log: ${GREEN}cat %s${RST}\n" "$INSTALL_LOG"

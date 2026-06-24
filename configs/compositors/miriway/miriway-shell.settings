@@ -1,0 +1,34 @@
+# Miriway Keybindings for LXQt
+# Place at: ~/.config/miriway-shell.settings
+# Miriway migrates from miriway-shell.config to miriway-shell.settings on first run.
+# Keybindings must be placed directly in .settings; shell-component= lines stay in .config.
+
+# Terminal
+command_ctrl_alt=t:miriway-unsnap qterminal
+
+# Application launcher
+command_shell_meta=a:miriway-unsnap lxqt-runner
+
+# Drop-down terminal
+command_shell_plain=F12:miriway-unsnap qterminal -d
+
+# Brightness
+command_plain=XF86MonBrightnessUp:miriway-unsnap lxqt-config-brightness -i
+command_plain=XF86MonBrightnessDown:miriway-unsnap lxqt-config-brightness -d
+
+# Window management
+command_meta=Left:@dock-left
+command_meta=Right:@dock-right
+command_meta=Space:@toggle-maximized
+command_meta=Home:@workspace-begin
+command_meta=End:@workspace-end
+command_meta=Page_Up:@workspace-up
+command_meta=Page_Down:@workspace-down
+
+# Exit session
+command_ctrl_alt=BackSpace:@exit
+
+# Volume (XF86 keys are handled by the compositor automatically)
+command_plain=XF86AudioRaiseVolume:miriway-unsnap pactl set-sink-volume @DEFAULT_SINK@ +5%
+command_plain=XF86AudioLowerVolume:miriway-unsnap pactl set-sink-volume @DEFAULT_SINK@ -5%
+command_plain=XF86AudioMute:miriway-unsnap pactl set-sink-mute @DEFAULT_SINK@ toggle

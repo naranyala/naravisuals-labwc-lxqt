@@ -1,11 +1,11 @@
 #!/bin/bash
 # Install and configure a Wayland compositor for LXQt
-# Supports: Hyprland, Sway, Wayfire (Labwc is the default, handled separately)
+# Supports: labwc, wayfire, kwin_wayland (stacking)
+#           Hyprland, sway, niri, river (tiling)
+#           miriway (Mir-based stacking)
 #
 # Usage:
-#   bash install-compositor.sh hyprland
-#   bash install-compositor.sh sway
-#   bash install-compositor.sh wayfire
+#   bash install-compositor.sh <compositor>
 #   bash install-compositor.sh --list
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,43 +14,97 @@ source "$SCRIPT_DIR/lib.sh"
 COMPOSITOR=""
 DRY_RUN=false
 
+# Map: compositor -> package_name (empty = from-source)
+declare -A PKG_MAP=(
+    [hyprland]="hyprland"
+    [sway]="sway"
+    [wayfire]="wayfire"
+    [labwc]="labwc"
+    [niri]="niri"
+    [river]="river"
+    [kwin_wayland]="kwin"
+    [miriway]=""
+)
+
+# Map: compositor -> display name for messages
+declare -A NAME_MAP=(
+    [hyprland]="Hyprland"
+    [sway]="Sway"
+    [wayfire]="Wayfire"
+    [labwc]="Labwc"
+    [niri]="Niri"
+    [river]="River"
+    [kwin_wayland]="KWin-Wayland"
+    [miriway]="Miriway"
+)
+
+# Map: compositor -> session.conf compositor value
+declare -A CONF_MAP=(
+    [hyprland]="Hyprland"
+    [sway]="sway"
+    [wayfire]="wayfire"
+    [labwc]="labwc"
+    [niri]="niri"
+    [river]="river"
+    [kwin_wayland]="kwin_wayland"
+    [miriway]="miriway"
+)
+
+# Map: compositor -> type for description
+declare -A TYPE_MAP=(
+    [hyprland]="tiling"
+    [sway]="tiling"
+    [wayfire]="stacking"
+    [labwc]="stacking"
+    [niri]="tiling"
+    [river]="tiling"
+    [kwin_wayland]="stacking"
+    [miriway]="stacking"
+)
+
+ALL_COMPOSITORS=(hyprland sway wayfire labwc niri river kwin_wayland miriway)
+
 for arg in "$@"; do
     case "$arg" in
         --dry-run) DRY_RUN=true ;;
         --list)
             printf "Available compositor profiles:\n"
-            printf "  hyprland   Hyprland (animations, blur, tiling)\n"
-            printf "  sway       Sway (i3-compatible tiling)\n"
-            printf "  wayfire    Wayfire (3D compositor, plugin-based)\n"
-            printf "  labwc      Labwc (default, Openbox-like stacking)\n"
+            for c in "${ALL_COMPOSITORS[@]}"; do
+                pkg="${PKG_MAP[$c]}"
+                src=""
+                [ -z "$pkg" ] && src=" (build from source)"
+                printf "  %-14s %s%s\n" "$c" "${NAME_MAP[$c]}" "$src"
+            done
             exit 0
             ;;
         --help|-h)
             printf "Install Wayland Compositor for LXQt\n\n"
             printf "Usage: bash install-compositor.sh <compositor>\n\n"
             printf "Compositors:\n"
-            printf "  hyprland   Animated tiling compositor\n"
-            printf "  sway       i3-compatible tiling compositor\n"
-            printf "  wayfire    3D plugin-based compositor\n"
-            printf "  labwc      Openbox-like stacking (default)\n\n"
-            printf "Options:\n"
+            for c in "${ALL_COMPOSITORS[@]}"; do
+                printf "  %-14s %s (%s)\n" "$c" "${NAME_MAP[$c]}" "${TYPE_MAP[$c]}"
+                pkg="${PKG_MAP[$c]}"
+                [ -n "$pkg" ] && printf "  %-14s   Package: %s\n" "" "$pkg" \
+                    || printf "  %-14s   Build from source\n" ""
+            done
+            printf "\nOptions:\n"
             printf "  --list     List available profiles\n"
             printf "  --dry-run  Preview only\n"
             exit 0
             ;;
-        hyprland|sway|wayfire|labwc)
+        hyprland|sway|wayfire|labwc|niri|river|kwin_wayland|miriway)
             COMPOSITOR="$arg"
             ;;
     esac
 done
 
 if [ -z "$COMPOSITOR" ]; then
-    log_error "Specify a compositor: hyprland, sway, wayfire, or labwc"
+    log_error "Specify a compositor: ${ALL_COMPOSITORS[*]}"
     log_info "Run with --list to see options"
     exit 1
 fi
 
-print_header "Install Compositor: $COMPOSITOR"
+print_header "Install Compositor: ${NAME_MAP[$COMPOSITOR]}"
 
 # --- Install compositor package ---
 install_pkg() {
@@ -64,92 +118,118 @@ install_pkg() {
     fi
 }
 
-log_step "Installing $COMPOSITOR"
+log_step "Installing ${NAME_MAP[$COMPOSITOR]}"
 case "$COMPOSITOR" in
-    hyprland)
-        install_pkg "hyprland" || {
-            log_info "Hyprland may need to be built from source"
-            log_info "  https://wiki.hyprland.org/Getting-Started/Installation/"
-        }
+    miriway)
+        log_info "Miriway must be built from source: bash scripts/update-mir-stack.sh"
         ;;
-    sway)
-        install_pkg "sway" ;;
-    wayfire)
-        install_pkg "wayfire" ;;
-    labwc)
-        install_pkg "labwc" ;;
+    *)
+        install_pkg "${PKG_MAP[$COMPOSITOR]}" || true
+        ;;
 esac
 
 # --- Copy compositor config ---
-COMPOSITOR_DIR="$HOME/.config/$COMPOSITOR"
 PROJECT_DIR="${SCRIPT_DIR}/../.."
 SRC_DIR="$PROJECT_DIR/configs/compositors/$COMPOSITOR"
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 
+config_installed=false
 if [ -d "$SRC_DIR" ]; then
-    mkdir -p "$COMPOSITOR_DIR"
-
     case "$COMPOSITOR" in
         hyprland)
-            mkdir -p "$HOME/.config/hypr"
+            mkdir -p "$XDG_CONFIG_HOME/hypr"
             if [ "$DRY_RUN" = true ]; then
-                log_dim "[DRY-RUN] Would copy $SRC_DIR/hyprland.conf -> $HOME/.config/hypr/"
+                log_dim "[DRY-RUN] Would copy $SRC_DIR/hyprland.conf -> $XDG_CONFIG_HOME/hypr/"
             else
-                cp "$SRC_DIR/hyprland.conf" "$HOME/.config/hypr/"
+                cp "$SRC_DIR/hyprland.conf" "$XDG_CONFIG_HOME/hypr/"
                 log_ok "Installed Hyprland config"
+                config_installed=true
             fi
             ;;
         sway)
+            mkdir -p "$XDG_CONFIG_HOME/sway"
             if [ "$DRY_RUN" = true ]; then
-                log_dim "[DRY-RUN] Would copy $SRC_DIR/config -> $COMPOSITOR_DIR/"
+                log_dim "[DRY-RUN] Would copy $SRC_DIR/config -> $XDG_CONFIG_HOME/sway/"
             else
-                cp "$SRC_DIR/config" "$COMPOSITOR_DIR/"
-                chmod 600 "$COMPOSITOR_DIR/config"
+                cp "$SRC_DIR/config" "$XDG_CONFIG_HOME/sway/"
+                chmod 600 "$XDG_CONFIG_HOME/sway/config"
                 log_ok "Installed Sway config"
+                config_installed=true
             fi
             ;;
         wayfire)
+            mkdir -p "$XDG_CONFIG_HOME/wayfire"
             if [ "$DRY_RUN" = true ]; then
-                log_dim "[DRY-RUN] Would copy $SRC_DIR/wayfire.ini -> $COMPOSITOR_DIR/"
+                log_dim "[DRY-RUN] Would copy $SRC_DIR/wayfire.ini -> $XDG_CONFIG_HOME/wayfire/"
             else
-                mkdir -p "$COMPOSITOR_DIR"
-                cp "$SRC_DIR/wayfire.ini" "$COMPOSITOR_DIR/"
+                cp "$SRC_DIR/wayfire.ini" "$XDG_CONFIG_HOME/wayfire/"
                 log_ok "Installed Wayfire config"
+                config_installed=true
             fi
             ;;
         labwc)
-            log_info "Labwc is the default. Configs already in ~/.config/labwc/"
+            log_info "Labwc configs already handled by dotfiles installer"
+            config_installed=true
+            ;;
+        niri)
+            mkdir -p "$XDG_CONFIG_HOME/lxqt/wayland"
+            if [ "$DRY_RUN" = true ]; then
+                log_dim "[DRY-RUN] Would copy $SRC_DIR/lxqt-niri.kdl -> $XDG_CONFIG_HOME/lxqt/wayland/"
+            else
+                cp "$SRC_DIR/lxqt-niri.kdl" "$XDG_CONFIG_HOME/lxqt/wayland/"
+                log_ok "Installed Niri config"
+                config_installed=true
+            fi
+            ;;
+        river)
+            mkdir -p "$XDG_CONFIG_HOME/lxqt/wayland"
+            if [ "$DRY_RUN" = true ]; then
+                log_dim "[DRY-RUN] Would copy $SRC_DIR/lxqt-river-init -> $XDG_CONFIG_HOME/lxqt/wayland/"
+            else
+                cp "$SRC_DIR/lxqt-river-init" "$XDG_CONFIG_HOME/lxqt/wayland/"
+                chmod 755 "$XDG_CONFIG_HOME/lxqt/wayland/lxqt-river-init"
+                log_ok "Installed River config"
+                config_installed=true
+            fi
+            ;;
+        kwin_wayland)
+            log_info "KWin is configured via Plasma System Settings GUI"
+            config_installed=true
+            ;;
+        miriway)
+            MIRIWAY_CONFIG="$XDG_CONFIG_HOME/miriway-shell.config"
+            if [ ! -f "$MIRIWAY_CONFIG" ]; then
+                DEFAULT_CONFIG="$SRC_DIR/miriway-shell.config"
+                if [ -f "$DEFAULT_CONFIG" ]; then
+                    if [ "$DRY_RUN" = true ]; then
+                        log_dim "[DRY-RUN] Would copy $DEFAULT_CONFIG -> $MIRIWAY_CONFIG"
+                    else
+                        cp "$DEFAULT_CONFIG" "$MIRIWAY_CONFIG"
+                        log_ok "Installed Miriway config"
+                        config_installed=true
+                    fi
+                fi
+            else
+                log_info "Miriway config already exists at $MIRIWAY_CONFIG"
+                config_installed=true
+            fi
             ;;
     esac
 fi
 
 # --- Update session.conf ---
-SESSION_CONF="$HOME/.config/lxqt/session.conf"
+SESSION_CONF="$XDG_CONFIG_HOME/lxqt/session.conf"
 if [ -f "$SESSION_CONF" ]; then
     log_step "Updating session.conf"
-    case "$COMPOSITOR" in
-        hyprland)
-            sed -i 's/^window_manager=.*/window_manager=Hyprland/' "$SESSION_CONF" 2>/dev/null || \
-                echo "window_manager=Hyprland" >> "$SESSION_CONF"
-            ;;
-        sway)
-            sed -i 's/^window_manager=.*/window_manager=sway/' "$SESSION_CONF" 2>/dev/null || \
-                echo "window_manager=sway" >> "$SESSION_CONF"
-            ;;
-        wayfire)
-            sed -i 's/^window_manager=.*/window_manager=wayfire/' "$SESSION_CONF" 2>/dev/null || \
-                echo "window_manager=wayfire" >> "$SESSION_CONF"
-            ;;
-        labwc)
-            sed -i 's/^window_manager=.*/window_manager=labwc/' "$SESSION_CONF" 2>/dev/null || \
-                echo "window_manager=labwc" >> "$SESSION_CONF"
-            ;;
-    esac
-    log_ok "Session manager configured for $COMPOSITOR"
+    conf_val="${CONF_MAP[$COMPOSITOR]}"
+    sed -i 's/^window_manager=.*/window_manager=/' "$SESSION_CONF" 2>/dev/null || true
+    sed -i "s/^compositor=.*/compositor=$conf_val/" "$SESSION_CONF" 2>/dev/null || \
+        echo "compositor=$conf_val" >> "$SESSION_CONF"
+    log_ok "Session manager configured for ${NAME_MAP[$COMPOSITOR]}"
 fi
 
 # --- Summary ---
-print_summary "Compositor Install" "ok" "$COMPOSITOR installed and configured"
+print_summary "Compositor Install" "ok" "${NAME_MAP[$COMPOSITOR]} installed and configured"
 printf "\n${BOLD}Next steps:${RST}\n"
 printf "  1. Log out of current session\n"
-printf "  2. Select '%s' from your display manager\n" "$COMPOSITOR"
-printf "  3. Or launch manually: %s\n" "$COMPOSITOR"
+printf "  2. Select 'LXQt (${NAME_MAP[$COMPOSITOR]})' from your display manager\n"
