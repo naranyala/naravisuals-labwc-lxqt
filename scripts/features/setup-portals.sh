@@ -3,7 +3,7 @@
 # Required for Flatpak, screen capture, and portal-based file choosers
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/../lib.sh"
+source "$SCRIPT_DIR/scripts/utils/lib.sh"
 
 print_header "XDG Desktop Portal Setup"
 

@@ -4,8 +4,8 @@ The default wallpaper path is referenced in labwc/autostart.
 To use a custom wallpaper:
 
   1. Copy your image to this directory (or anywhere else)
-  2. Run: cp wallpaper.png /usr/share/lxqt/wallpapers/origami-dark-labwc.png
-  3. Or set via: echo "/path/to/wallpaper" > ~/.config/labwc/wallpaper
+  2. Or set via: echo "/path/to/wallpaper" > ~/.config/labwc/wallpaper
+  3. Or use the wallpaper GUI: ./run_wallpaper_gui.sh
 
 Recommended formats: PNG, JPG, WebP
 Recommended resolution: at least 1920x1080

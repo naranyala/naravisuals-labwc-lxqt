@@ -17,10 +17,33 @@
 
 const QString WORKSPACE_DIR = "/media/naranyala/Data/projects-remote/naravisuals-labwc-lxqt";
 
+QString findScript(const QString &name) {
+    QStringList searchDirs = {
+        WORKSPACE_DIR,
+        WORKSPACE_DIR + "/scripts",
+        WORKSPACE_DIR + "/scripts/launchers",
+        WORKSPACE_DIR + "/scripts/fixes",
+        WORKSPACE_DIR + "/scripts/installers",
+        WORKSPACE_DIR + "/scripts/themes",
+        WORKSPACE_DIR + "/scripts/compositors",
+        WORKSPACE_DIR + "/scripts/input",
+        WORKSPACE_DIR + "/scripts/desktop",
+        WORKSPACE_DIR + "/scripts/panel",
+        WORKSPACE_DIR + "/scripts/apps-widgets",
+        WORKSPACE_DIR + "/scripts/utils",
+        WORKSPACE_DIR + "/scripts/dev",
+        WORKSPACE_DIR + "/scripts/features",
+    };
+    for (const auto &dir : searchDirs) {
+        QString path = dir + "/" + name;
+        if (QFile::exists(path)) return path;
+    }
+    return {};
+}
+
 void runScript(const QString &scriptName) {
-    QString path = WORKSPACE_DIR + "/" + scriptName;
-    if (!QFile::exists(path)) path = WORKSPACE_DIR + "/scripts/" + scriptName;
-    if (!QFile::exists(path)) {
+    QString path = findScript(scriptName);
+    if (path.isEmpty()) {
         QMessageBox::warning(nullptr, "Error", "Script not found: " + scriptName);
         return;
     }
@@ -28,9 +51,8 @@ void runScript(const QString &scriptName) {
 }
 
 void runTerminalScript(const QString &scriptName) {
-    QString path = WORKSPACE_DIR + "/" + scriptName;
-    if (!QFile::exists(path)) path = WORKSPACE_DIR + "/scripts/" + scriptName;
-    if (!QFile::exists(path)) {
+    QString path = findScript(scriptName);
+    if (path.isEmpty()) {
         QMessageBox::warning(nullptr, "Error", "Script not found: " + scriptName);
         return;
     }
@@ -228,7 +250,7 @@ public:
         gLayout->setSpacing(10);
 
         auto *scrollBtn = new QPushButton("Enable Natural Scrolling");
-        connect(scrollBtn, &QPushButton::clicked, [](){ runScript("enable-natural-scrollong.sh"); });
+        connect(scrollBtn, &QPushButton::clicked, [](){ runScript("enable-natural-scrolling.sh"); });
         gLayout->addWidget(scrollBtn);
 
         auto *tapBtn = new QPushButton("Enable Touchpad Tap-to-Click");
@@ -323,13 +345,17 @@ public:
     SystemPage(QWidget *parent = nullptr) : QWidget(parent) {
         auto *layout = new QVBoxLayout(this);
 
-        auto *portalGroup = new QGroupBox("XDG Portals");
+        auto *portalGroup = new QGroupBox("Portals & Permissions");
         auto *ptLayout = new QVBoxLayout(portalGroup);
         ptLayout->setSpacing(10);
 
         auto *portalBtn = new QPushButton("Setup XDG Portals");
         connect(portalBtn, &QPushButton::clicked, [](){ runTerminalScript("features/setup-portals.sh"); });
         ptLayout->addWidget(portalBtn);
+
+        auto *flatpakPermBtn = new QPushButton("List Flatpak Permissions");
+        connect(flatpakPermBtn, &QPushButton::clicked, [](){ runTerminalScript("features/list-flatpak-permissions.sh"); });
+        ptLayout->addWidget(flatpakPermBtn);
 
         layout->addWidget(portalGroup);
 
@@ -342,6 +368,24 @@ public:
         fLayout->addWidget(fedoraBtn);
 
         layout->addWidget(fedoraGroup);
+
+        auto *nightLightGroup = new QGroupBox("Night Light");
+        auto *nLayout = new QVBoxLayout(nightLightGroup);
+        nLayout->setSpacing(10);
+
+        auto *nightOnBtn = new QPushButton("Enable Night Light");
+        connect(nightOnBtn, &QPushButton::clicked, [](){ runTerminalScript("features/night-light.sh on"); });
+        nLayout->addWidget(nightOnBtn);
+
+        auto *nightOffBtn = new QPushButton("Disable Night Light");
+        connect(nightOffBtn, &QPushButton::clicked, [](){ runTerminalScript("features/night-light.sh off"); });
+        nLayout->addWidget(nightOffBtn);
+
+        auto *nightStatusBtn = new QPushButton("Check Night Light Status");
+        connect(nightStatusBtn, &QPushButton::clicked, [](){ runTerminalScript("features/night-light.sh status"); });
+        nLayout->addWidget(nightStatusBtn);
+
+        layout->addWidget(nightLightGroup);
 
         auto *maintenanceGroup = new QGroupBox("Maintenance");
         auto *mLayout = new QVBoxLayout(maintenanceGroup);
@@ -439,6 +483,11 @@ int main(int argc, char *argv[]) {
         "QLabel { font-size: 14px; }"
         "QMessageBox { background-color: #1e1e2e; color: #cdd6f4; }"
         "QMessageBox QPushButton { background-color: #89b4fa; color: #1e1e2e; border-radius: 6px; padding: 8px 15px; }"
+        "QScrollBar:vertical { background: #11111b; width: 8px; margin: 0px; }"
+        "QScrollBar::handle:vertical { background: #313244; min-height: 20px; border-radius: 4px; }"
+        "QScrollBar::handle:vertical:hover { background: #45475a; }"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }"
+        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }"
     );
     
     ControlCenterWindow window;

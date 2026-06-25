@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=X-PanelPlugin
+Name=Updates Indicator
+Comment=Show available package updates in the panel
+Icon=system-software-update
+X-LXQt-Plugin-Type=desktoppanel
+X-LXQt-PluginLibrary=naravisuals-updates
+X-LXQt-PluginFor=lxqt-panel

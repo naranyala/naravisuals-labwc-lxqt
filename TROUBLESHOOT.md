@@ -311,7 +311,7 @@ echo "50%" > /tmp/wob_fifo
 pgrep -a swaybg
 
 # If not, start it manually
-WALLPAPER=$(cat ~/.config/labwc/wallpaper 2>/dev/null || echo "$HOME/.local/share/wallpapers/origami-dark-labwc.png")
+WALLPAPER=$(cat ~/.config/labwc/wallpaper 2>/dev/null || echo "/usr/share/backgrounds/warty-final-ubuntu.png")
 swaybg -i "$WALLPAPER" -m fill &
 
 # Check wallpaper path exists

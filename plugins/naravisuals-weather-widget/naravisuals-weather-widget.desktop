@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=X-PanelPlugin
+Name=Weather Widget
+Comment=Display current weather in the panel
+Icon=weather-few-clouds
+X-LXQt-Plugin-Type=desktoppanel
+X-LXQt-PluginLibrary=naravisuals-weather-widget
+X-LXQt-PluginFor=lxqt-panel

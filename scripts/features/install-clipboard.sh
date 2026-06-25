@@ -3,7 +3,7 @@
 # Source lib.sh for shared utilities
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/../lib.sh"
+source "$SCRIPT_DIR/scripts/utils/lib.sh"
 
 print_header "Clipboard Manager Setup"
 

@@ -7,7 +7,7 @@ set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
-add_executable(nv-wm-gui main.cpp
+add_executable(nv-wm-gui main.cpp windowrules.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/healthcheck.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../shared/healthcheckwidget.cpp
 )

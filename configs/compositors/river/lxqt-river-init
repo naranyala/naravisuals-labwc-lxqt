@@ -6,7 +6,7 @@
 riverctl spawn "lxqt-session && riverctl exit"
 
 # ---- Wallpaper ----
-riverctl spawn "swaybg -i ~/.local/share/wallpapers/origami-dark-labwc.png -m fill"
+riverctl spawn "sh -c 'W=\$(cat ~/.config/labwc/wallpaper 2>/dev/null); [ -f \"\$W\" ] && exec swaybg -i \"\$W\" -m fill || exec swaybg -i /usr/share/backgrounds/warty-final-ubuntu.png -m fill'"
 
 # ---- Input ----
 riverctl keyboard-layout us

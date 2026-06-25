@@ -6,7 +6,7 @@
 spawn-sh-at-startup "lxqt-session && niri msg action quit -s"
 
 // ---- Wallpaper ----
-spawn-sh-at-startup "swaybg -i ~/.local/share/wallpapers/origami-dark-labwc.png -m fill"
+spawn-sh-at-startup "sh -c 'W=$(cat ~/.config/labwc/wallpaper 2>/dev/null); [ -f \"$W\" ] && exec swaybg -i \"$W\" -m fill || exec swaybg -i /usr/share/backgrounds/warty-final-ubuntu.png -m fill'"
 
 // ---- Layout ----
 layout {

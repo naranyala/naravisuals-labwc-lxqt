@@ -4,7 +4,13 @@
 # ==============================
 # This script runs when labwc exits.
 
-# Kill swaybg
+# Kill screenshot daemon
+pkill flameshot 2>/dev/null || true
+
+# Kill night light
+pkill redshift 2>/dev/null || true
+
+# Kill wallpaper
 pkill swaybg 2>/dev/null || true
 
 # Kill notification daemon
@@ -12,6 +18,9 @@ pkill dunst 2>/dev/null || true
 
 # Kill panel
 pkill lxqt-panel 2>/dev/null || true
+
+# Kill dock
+pkill crystal-dock 2>/dev/null || true
 
 # Kill policy kit agent
 pkill lxqt-policykit-agent 2>/dev/null || true
@@ -26,7 +35,6 @@ pkill blueman-applet 2>/dev/null || true
 pkill swayidle 2>/dev/null || true
 
 # Kill clipboard manager
-pkill copyq 2>/dev/null || true
 pkill cliphist 2>/dev/null || true
 
 # Reset cursor visibility

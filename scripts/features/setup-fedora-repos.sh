@@ -9,7 +9,7 @@
 #   bash setup-fedora-repos.sh --dry-run    # Preview only
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-source "$SCRIPT_DIR/lib.sh"
+source "$SCRIPT_DIR/scripts/utils/lib.sh"
 
 DRY_RUN=false
 FORCE=false

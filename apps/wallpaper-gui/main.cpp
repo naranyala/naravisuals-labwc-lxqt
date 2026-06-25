@@ -12,6 +12,7 @@
 #include <QProcess>
 #include <QStatusBar>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QPixmap>
 #include <QStandardPaths>
@@ -24,6 +25,7 @@
 #include <QHeaderView>
 #include <QComboBox>
 #include <QMimeDatabase>
+#include <QSettings>
 #include <QtConcurrent/QtConcurrentRun>
 
 // ============================================================
@@ -356,6 +358,12 @@ struct WallpaperEntry {
     QString name;
 };
 
+// Forward declarations (defined after WallpaperGui)
+const QString settingsFilePath();
+QStringList loadHistoryEntries();
+void appendHistoryEntry(const QString &backend, const QString &path);
+bool detectBackend(QString &out);
+
 // ============================================================
 // Main application window
 // ============================================================
@@ -363,7 +371,9 @@ class WallpaperGui : public QMainWindow {
     Q_OBJECT
 
 public:
-    WallpaperGui(QWidget *parent = nullptr) : QMainWindow(parent) {
+    WallpaperGui(const QString &initialDir = QString(), QWidget *parent = nullptr)
+        : QMainWindow(parent)
+    {
         setWindowTitle("Wallpaper Manager");
         resize(780, 620);
 
@@ -373,7 +383,7 @@ public:
         mainLayout->setSpacing(12);
         mainLayout->setContentsMargins(20, 20, 20, 20);
 
-        detectBackend();
+        detectBackendSlot();
 
         auto *header = new QLabel("Browse and set desktop wallpapers");
         header->setStyleSheet("font-size: 14px; color: #a6adc8; margin-bottom: 5px;");
@@ -427,43 +437,36 @@ public:
         mainLayout->addLayout(btnRow);
 
         statusBar()->setStyleSheet("background-color: #181825; color: #a6adc8; border-top: 1px solid #313244;");
-        statusBar()->showMessage("Backend: " + backend + " | Select a directory to browse wallpapers");
+
+        QStringList hist = getHistory();
+        if (!hist.isEmpty()) {
+            QStringList parts = hist.first().split("|");
+            if (parts.size() >= 3) {
+                statusBar()->showMessage("Last: " + parts[2] + " (" + parts[1] + " @ " + parts[0] + ")");
+            }
+        } else {
+            statusBar()->showMessage("Backend: " + backend + " | Select a directory to browse wallpapers");
+        }
 
         applyStyle();
 
-        // Auto-detect common wallpaper dirs
-        QString home = QDir::homePath();
-        QStringList candidates = {
-            home + "/Pictures/Wallpapers",
-            home + "/Wallpapers",
-            home + "/.config/wallpapers",
-            "/usr/share/wallpapers",
-            "/usr/share/backgrounds"
-        };
-        for (const auto &dir : candidates) {
-            if (QDir(dir).exists()) {
-                pathEdit->setText(dir);
-                scanDirectory();
-                break;
-            }
-        }
+        // Determine start path: CLI arg > saved setting > auto-detect
+        QString startPath = resolveStartPath(initialDir);
+        pathEdit->setText(startPath);
+        scanDirectory();
+    }
+
+    ~WallpaperGui() {
+        saveLastPath(pathEdit->text().trimmed());
     }
 
 private slots:
-    void detectBackend() {
-        QProcess p;
-        p.start("which", {"swww"});
-        p.waitForFinished(3000);
-        if (p.exitCode() == 0) {
-            backend = "swww";
+    void detectBackendSlot() {
+        QString be;
+        if (detectBackend(be)) {
+            backend = be;
         } else {
-            p.start("which", {"swaybg"});
-            p.waitForFinished(3000);
-            if (p.exitCode() == 0) {
-                backend = "swaybg";
-            } else {
-                backend = "none";
-            }
+            backend = "none";
         }
     }
 
@@ -475,6 +478,7 @@ private slots:
             QString dir = dlg.selectedPath();
             if (!dir.isEmpty()) {
                 pathEdit->setText(dir);
+                saveLastPath(dir);
                 scanDirectory();
             }
         }
@@ -509,6 +513,8 @@ private slots:
             statusBar()->showMessage("Directory not found: " + dirPath);
             return;
         }
+
+        saveLastPath(dirPath);
 
         QStringList filters;
         filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp" << "*.webp" << "*.gif";
@@ -604,18 +610,27 @@ private slots:
     }
 
     void applyWallpaper(const QString &path) {
+        // Persist for labwc autostart
+        QString wcFile = QDir::homePath() + "/.config/labwc/wallpaper";
+        QDir().mkpath(QFileInfo(wcFile).absolutePath());
+        QFile f(wcFile);
+        if (f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            f.write(path.toUtf8());
+            f.close();
+        }
+
         if (backend == "swww") {
-            // Kill existing swww-daemon, restart, then set
             QProcess::execute("pkill", {"swww-daemon"});
             QProcess::startDetached("swww", {"init"});
             QTimer::singleShot(500, this, [this, path]() {
                 QProcess::startDetached("swww", {"img", path});
+                logHistory("swww", path);
                 statusBar()->showMessage("Wallpaper set via swww: " + path);
             });
         } else if (backend == "swaybg") {
-            // Kill existing swaybg, start new one
             QProcess::execute("pkill", {"swaybg"});
             QProcess::startDetached("swaybg", {"-m", "fill", "-i", path});
+            logHistory("swaybg", path);
             statusBar()->showMessage("Wallpaper set via swaybg: " + path);
         } else {
             statusBar()->showMessage("No wallpaper backend found (install swww or swaybg)");
@@ -623,6 +638,51 @@ private slots:
     }
 
 private:
+    static QString loadLastPath() {
+        QSettings s(settingsFilePath(), QSettings::IniFormat);
+        return s.value("lastPath").toString();
+    }
+
+    static void saveLastPath(const QString &path) {
+        QSettings s(settingsFilePath(), QSettings::IniFormat);
+        s.setValue("lastPath", path);
+    }
+
+    static void logHistory(const QString &backend, const QString &path) {
+        appendHistoryEntry(backend, path);
+    }
+
+    static QStringList getHistory() {
+        return loadHistoryEntries();
+    }
+
+    QString resolveStartPath(const QString &cliPath) {
+        // Priority: CLI arg > saved last path > auto-detect
+        if (!cliPath.isEmpty() && QDir(cliPath).exists()) {
+            return cliPath;
+        }
+
+        QString saved = loadLastPath();
+        if (!saved.isEmpty() && QDir(saved).exists()) {
+            return saved;
+        }
+
+        QString home = QDir::homePath();
+        QStringList candidates = {
+            home + "/Pictures/Wallpapers",
+            home + "/Wallpapers",
+            home + "/.config/wallpapers",
+            "/usr/share/wallpapers",
+            "/usr/share/backgrounds"
+        };
+        for (const auto &dir : candidates) {
+            if (QDir(dir).exists()) {
+                return dir;
+            }
+        }
+        return home;
+    }
+
     void applyStyle() {
         setStyleSheet(
             "QMainWindow { background-color: #1e1e2e; }"
@@ -641,26 +701,53 @@ private:
     QList<WallpaperEntry> wallpapers;
 };
 
+const QString settingsFilePath() {
+    return QDir::homePath() + "/.config/nv-wallpaper-gui.conf";
+}
+
+QStringList loadHistoryEntries() {
+    QSettings s(settingsFilePath(), QSettings::IniFormat);
+    return s.value("history/entries").toStringList();
+}
+
+void appendHistoryEntry(const QString &backend, const QString &path) {
+    QSettings s(settingsFilePath(), QSettings::IniFormat);
+    QStringList entries = s.value("history/entries").toStringList();
+    QString ts = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+    entries.prepend(ts + "|" + backend + "|" + path);
+    if (entries.size() > 50) entries = entries.mid(0, 50);
+    s.setValue("history/entries", entries);
+}
+
+bool detectBackend(QString &out) {
+    QProcess p;
+    p.start("which", {"swww"});
+    p.waitForFinished(3000);
+    if (p.exitCode() == 0) { out = "swww"; return true; }
+    p.start("which", {"swaybg"});
+    p.waitForFinished(3000);
+    if (p.exitCode() == 0) { out = "swaybg"; return true; }
+    return false;
+}
+
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+    app.setOrganizationName("naravisuals");
+    app.setApplicationName("wallpaper-gui");
+
+    QString cliDir;
+    bool headlessSet = false;
+    QString headlessPath;
+    bool showHistory = false;
+    bool showLast = false;
 
     for (int i = 1; i < argc; ++i) {
         QString arg = argv[i];
         if (arg == "--set" && i + 1 < argc) {
-            QString path = argv[++i];
-            // Detect backend and apply
-            QProcess p;
-            p.start("which", {"swww"});
-            p.waitForFinished(3000);
-            if (p.exitCode() == 0) {
-                QProcess::execute("pkill", {"swww-daemon"});
-                QProcess::startDetached("swww", {"init"});
-                QProcess::startDetached("swww", {"img", path});
-            } else {
-                QProcess::execute("pkill", {"swaybg"});
-                QProcess::startDetached("swaybg", {"-m", "fill", "-i", path});
-            }
-            return 0;
+            headlessSet = true;
+            headlessPath = argv[++i];
+        } else if (arg == "--dir" && i + 1 < argc) {
+            cliDir = argv[++i];
         } else if (arg == "--list" && i + 1 < argc) {
             QString dirPath = argv[++i];
             QDir dir(dirPath);
@@ -669,16 +756,90 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
             QStringList filters;
-            filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp" << "*.webp";
+            filters << "*.jpg" << "*.jpeg" << "*.png" << "*.bmp" << "*.webp" << "*.gif";
             QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
             for (const auto &fi : files) {
                 printf("%s\n", fi.absoluteFilePath().toUtf8().constData());
             }
             return 0;
+        } else if (arg == "--history") {
+            showHistory = true;
+        } else if (arg == "--last") {
+            showLast = true;
+        } else if (arg == "--help" || arg == "-h") {
+            printf("Usage: nv-wallpaper-gui [OPTIONS]\n\n");
+            printf("Options:\n");
+            printf("  --set <path>    Set wallpaper directly (no GUI), then exit\n");
+            printf("  --dir <path>    Open GUI at the specified directory\n");
+            printf("  --list <path>   List images in directory, then exit\n");
+            printf("  --history       Show wallpaper set history, then exit\n");
+            printf("  --last          Show the last wallpaper set, then exit\n");
+            printf("  --help, -h      Show this help message\n");
+            return 0;
         }
     }
 
-    WallpaperGui gui;
+    // --history or --last: no QApplication needed for these, but we already have one
+    if (showHistory || showLast) {
+        QStringList entries = loadHistoryEntries();
+        if (entries.isEmpty()) {
+            printf("No wallpaper history found.\n");
+            return 0;
+        }
+        if (showLast) {
+            QStringList parts = entries.first().split("|");
+            if (parts.size() >= 3) {
+                printf("%s\n", parts[2].toUtf8().constData());
+            }
+            return 0;
+        }
+        printf("%-20s %-10s %s\n", "TIMESTAMP", "BACKEND", "PATH");
+        printf("%-20s %-10s %s\n", "────────────────────", "──────────", "────────────────────────────────────────");
+        for (const auto &entry : entries) {
+            QStringList parts = entry.split("|");
+            if (parts.size() >= 3) {
+                printf("%-20s %-10s %s\n",
+                    parts[0].toUtf8().constData(),
+                    parts[1].toUtf8().constData(),
+                    parts[2].toUtf8().constData());
+            }
+        }
+        return 0;
+    }
+
+    if (headlessSet) {
+        if (!QFileInfo(headlessPath).isFile()) {
+            fprintf(stderr, "File not found: %s\n", headlessPath.toUtf8().constData());
+            return 1;
+        }
+        // Persist for labwc autostart
+        QString wcFile = QDir::homePath() + "/.config/labwc/wallpaper";
+        QDir().mkpath(QFileInfo(wcFile).absolutePath());
+        QFile wf(wcFile);
+        if (wf.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            wf.write(headlessPath.toUtf8());
+            wf.close();
+        }
+
+        QString be;
+        if (detectBackend(be)) {
+            if (be == "swww") {
+                QProcess::execute("pkill", {"swww-daemon"});
+                QProcess::startDetached("swww", {"init"});
+                QProcess::startDetached("swww", {"img", headlessPath});
+            } else {
+                QProcess::execute("pkill", {"swaybg"});
+                QProcess::startDetached("swaybg", {"-m", "fill", "-i", headlessPath});
+            }
+            appendHistoryEntry(be, headlessPath);
+            return 0;
+        } else {
+            fprintf(stderr, "No wallpaper backend found (install swww or swaybg)\n");
+            return 1;
+        }
+    }
+
+    WallpaperGui gui(cliDir);
     gui.show();
     return app.exec();
 }

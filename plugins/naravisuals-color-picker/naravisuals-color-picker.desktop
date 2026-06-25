@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=X-PanelPlugin
+Name=Color Picker
+Comment=Pick colors from anywhere on screen
+Icon=color-picker
+X-LXQt-Plugin-Type=desktoppanel
+X-LXQt-PluginLibrary=naravisuals-color-picker
+X-LXQt-PluginFor=lxqt-panel

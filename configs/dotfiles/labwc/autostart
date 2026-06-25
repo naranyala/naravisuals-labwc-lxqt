@@ -4,43 +4,57 @@
 # ================================
 # This script runs at labwc startup after the environment is loaded.
 
-# Set wallpaper using swaybg
-if command -v swaybg &>/dev/null; then
-  WALLPAPER_DIR="$HOME/.local/share/wallpapers"
-  if [ -f "$HOME/.config/labwc/wallpaper" ]; then
-    WALLPAPER=$(cat "$HOME/.config/labwc/wallpaper")
-  elif [ -f "$WALLPAPER_DIR/origami-dark-labwc.png" ]; then
-    WALLPAPER="$WALLPAPER_DIR/origami-dark-labwc.png"
-  elif [ -f "/usr/share/lxqt/wallpapers/origami-dark-labwc.png" ]; then
-    WALLPAPER="/usr/share/lxqt/wallpapers/origami-dark-labwc.png"
-  else
-    WALLPAPER=""
-  fi
-  if [ -n "$WALLPAPER" ] && [ -f "$WALLPAPER" ]; then
-    swaybg -i "$WALLPAPER" -m fill &
-  fi
+# ---- Screenshot daemon (flameshot) ----
+if command -v flameshot &>/dev/null; then
+  flameshot daemon &
 fi
 
-# Notification daemon
+# ---- Night light (redshift) ----
+if command -v redshift &>/dev/null; then
+  redshift &
+fi
+
+# ---- LXQt Panel ----
+if command -v lxqt-panel &>/dev/null; then
+  lxqt-panel &
+fi
+
+# ---- Dock (task manager) ----
+if command -v crystal-dock &>/dev/null; then
+  crystal-dock &
+fi
+
+# ---- Wallpaper (read from config, fallback to default) ----
+if command -v swaybg &>/dev/null; then
+  WALLPAPER_FALLBACK="/usr/share/backgrounds/cnusr25-Simple_Raccoon_Dark.png"
+  if [ -f "$HOME/.config/labwc/wallpaper" ]; then
+    WALLPAPER=$(cat "$HOME/.config/labwc/wallpaper")
+    [ -f "$WALLPAPER" ] || WALLPAPER="$WALLPAPER_FALLBACK"
+  else
+    WALLPAPER="$WALLPAPER_FALLBACK"
+  fi
+  swaybg -i "$WALLPAPER" -m fill &
+fi
+
+# ---- Notification daemon ----
 if command -v dunst &>/dev/null; then
   dunst &
 elif command -v lxqt-notificationd &>/dev/null; then
   lxqt-notificationd &
 fi
 
-# LXQt PolicyKit agent for elevated privileges
+# ---- LXQt PolicyKit agent ----
 if command -v lxqt-policykit-agent &>/dev/null; then
   lxqt-policykit-agent &
 fi
 
-# Clipboard manager (Wayland compatible)
-if command -v copyq &>/dev/null; then
-  copyq --start-server &
-elif command -v cliphist &>/dev/null && command -v wl-paste &>/dev/null; then
-  wl-paste --watch cliphist store &
+# ---- Clipboard manager (Wayland native) ----
+if command -v cliphist &>/dev/null && command -v wl-paste &>/dev/null; then
+  wl-paste --type text --watch cliphist store &
+  wl-paste --type image --watch cliphist store &
 fi
 
-# Screen idle / power management
+# ---- Screen idle / power management ----
 if command -v swayidle &>/dev/null; then
   swayidle -w \
     timeout 300 'if command -v wlopm &>/dev/null; then wlopm --off \*; fi' \
@@ -49,17 +63,20 @@ if command -v swayidle &>/dev/null; then
     before-sleep 'swaylock -f' &
 fi
 
-# Network manager applet
+# ---- Network manager applet ----
 if command -v nm-applet &>/dev/null; then
   nm-applet --indicator &
 fi
 
-# Bluetooth tray
+# ---- Bluetooth tray ----
 if command -v blueman-applet &>/dev/null; then
   blueman-applet &
 fi
 
-# GTK portals for Flatpak/file dialogs
+# ---- Wayland portals (order matters: wlroots before lxqt) ----
+if command -v xdg-desktop-portal-wlr &>/dev/null; then
+  /usr/libexec/xdg-desktop-portal-wlr &
+fi
 if command -v xdg-desktop-portal-lxqt &>/dev/null; then
   /usr/libexec/xdg-desktop-portal-lxqt &
 fi
@@ -67,25 +84,7 @@ if command -v xdg-desktop-portal &>/dev/null; then
   /usr/libexec/xdg-desktop-portal &
 fi
 
-# Update GTK cursor icon (sync with LXQt settings)
-if [ -f "$HOME/.config/lxqt/session.conf" ]; then
-  GTK_CURSOR=$(grep "^cursor_theme=" "$HOME/.config/lxqt/session.conf" 2>/dev/null | cut -d= -f2)
-  GTK_CURSOR_SIZE=$(grep "^cursor_size=" "$HOME/.config/lxqt/session.conf" 2>/dev/null | cut -d= -f2)
-  if [ -n "$GTK_CURSOR" ]; then
-    gsettings set org.gnome.desktop.interface cursor-theme "$GTK_CURSOR" 2>/dev/null || true
-  fi
-  if [ -n "$GTK_CURSOR_SIZE" ]; then
-    gsettings set org.gnome.desktop.interface cursor-size "$GTK_CURSOR_SIZE" 2>/dev/null || true
-  fi
-fi
-
-# Auto-mount removable media
+# ---- Auto-mount removable media ----
 if command -v lxqt-pcmanfm-automount &>/dev/null; then
   lxqt-pcmanfm-automount &
-fi
-
-# Screenshot tool (Wayland native)
-if command -v grimshot &>/dev/null; then
-  # Already bound to Print key in rc.xml
-  :
 fi

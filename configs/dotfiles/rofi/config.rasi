@@ -14,13 +14,13 @@ configuration {
 }
 
 * {
-    bg:         #2e3440F2;
-    bg-alt:     #3b4252F2;
+    bg:         #2e3440;
+    bg-alt:     #3b4252;
     fg:         #d8dee9;
     fg-alt:     #a6adc8;
     accent:     #81a1c1;
     urgent:     #bf616a;
-    selected:   #81a1c1F2;
+    selected:   #434c5e;
 
     background-color: transparent;
     text-color:       @fg;
@@ -65,14 +65,19 @@ listview {
 }
 
 element {
-    padding:       8px 12px;
-    border-radius: 6px;
-    spacing:       12px;
+    padding:          8px 12px;
+    border-radius:    6px;
+    spacing:          12px;
+    background-color: transparent;
 }
 
 element selected {
     background-color: @selected;
-    text-color:       @bg;
+    text-color:       @fg;
+}
+
+element alternate {
+    background-color: transparent;
 }
 
 element-icon {

@@ -11,12 +11,15 @@
 #include <QTabWidget>
 #include "../shared/healthcheck.h"
 #include "../shared/healthcheckwidget.h"
+#include "windowrules.h"
+
+// ─── Main WM GUI ─────────────────────────────────────────────────────────────
 
 class WmGui : public QMainWindow {
 public:
     WmGui(QWidget *parent = nullptr) : QMainWindow(parent) {
         setWindowTitle("Window Manager Configurator");
-        resize(500, 400);
+        resize(600, 450);
 
         auto *central = new QWidget(this);
         setCentralWidget(central);
@@ -68,6 +71,10 @@ public:
         layout->addLayout(btnLayout);
 
         tabs->addTab(configTab, "Config");
+
+        // --- Window Rules Tab ---
+        auto *rulesTab = new WindowRulesTab();
+        tabs->addTab(rulesTab, "Window Rules");
 
         // --- Health Check Tab ---
         auto *checker = new WmHealthChecker(this);

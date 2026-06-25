@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.16)
+project(naravisuals-plugins LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(COMPILE_LXQT_PANEL ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network)
+find_package(lxqt-panel REQUIRED)
+
+message(STATUS "LXQt Panel plugins dir: ${lxqt-panel_PLUGINS_DIR}")
+message(STATUS "LXQt Panel share dir: ${lxqt-panel_SHARE_DIR}")
+
+add_subdirectory(naravisuals-weather-widget)
+add_subdirectory(naravisuals-cpu-monitor)
+add_subdirectory(naravisuals-sticky-notes)
+add_subdirectory(naravisuals-color-picker)
+add_subdirectory(naravisuals-screenshot)
+add_subdirectory(naravisuals-nightlight)
+add_subdirectory(naravisuals-updates)

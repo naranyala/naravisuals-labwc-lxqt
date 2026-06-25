@@ -75,33 +75,96 @@ public:
 
         layout->addWidget(lidGroup);
 
-        // --- Buttons ---
-        auto *btnRow = new QHBoxLayout();
-        btnRow->addStretch();
+    // --- Power Profiles ---
+    auto *profileGroup = new QGroupBox("Power Profile (power-profiles-daemon)");
+    profileGroup->setStyleSheet(groupStyle());
+    auto *profileLayout = new QVBoxLayout(profileGroup);
 
-        auto *loadBtn = new QPushButton("Load Current");
-        loadBtn->setMinimumHeight(38);
-        connect(loadBtn, &QPushButton::clicked, this, &PowerGui::loadConfig);
-        btnRow->addWidget(loadBtn);
+    auto *profileRow = new QHBoxLayout();
+    auto *profileLabel = new QLabel("Profile:");
+    profileLabel->setStyleSheet("color: #a6adc8;");
+    profileRow->addWidget(profileLabel);
+    profileCombo = new QComboBox();
+    profileCombo->setMinimumHeight(36);
+    profileRow->addWidget(profileCombo, 1);
+    profileLayout->addLayout(profileRow);
 
-        auto *applyBtn = new QPushButton("Apply");
-        applyBtn->setMinimumHeight(38);
-        applyBtn->setStyleSheet(
-            "QPushButton { background-color: #a6e3a1; color: #1e1e2e; border-radius: 6px; padding: 10px; font-weight: bold; font-size: 14px; border: none; }"
-            "QPushButton:hover { background-color: #b4f9b8; }"
-        );
-        connect(applyBtn, &QPushButton::clicked, this, &PowerGui::applyConfig);
-        btnRow->addWidget(applyBtn);
+    auto *profileBtnRow = new QHBoxLayout();
+    auto *refreshProfilesBtn = new QPushButton("Detect Profiles");
+    refreshProfilesBtn->setMinimumHeight(34);
+    connect(refreshProfilesBtn, &QPushButton::clicked, this, &PowerGui::loadProfiles);
+    profileBtnRow->addWidget(refreshProfilesBtn);
 
-        layout->addLayout(btnRow);
-        layout->addStretch();
+    auto *applyProfileBtn = new QPushButton("Apply Profile");
+    applyProfileBtn->setMinimumHeight(34);
+    connect(applyProfileBtn, &QPushButton::clicked, this, &PowerGui::applyProfile);
+    profileBtnRow->addWidget(applyProfileBtn);
 
-        statusBar()->setStyleSheet("background-color: #181825; color: #a6adc8; border-top: 1px solid #313244;");
-        applyStyle();
-        loadConfig();
+    profileLayout->addLayout(profileBtnRow);
+    layout->addWidget(profileGroup);
+
+    // --- Buttons ---
+    auto *btnRow = new QHBoxLayout();
+    btnRow->addStretch();
+
+    auto *loadBtn = new QPushButton("Load Current");
+    loadBtn->setMinimumHeight(38);
+    connect(loadBtn, &QPushButton::clicked, this, &PowerGui::loadConfig);
+    btnRow->addWidget(loadBtn);
+
+    auto *applyBtn = new QPushButton("Apply");
+    applyBtn->setMinimumHeight(38);
+    applyBtn->setStyleSheet(
+        "QPushButton { background-color: #a6e3a1; color: #1e1e2e; border-radius: 6px; padding: 10px; font-weight: bold; font-size: 14px; border: none; }"
+        "QPushButton:hover { background-color: #b4f9b8; }"
+    );
+    connect(applyBtn, &QPushButton::clicked, this, &PowerGui::applyConfig);
+    btnRow->addWidget(applyBtn);
+
+    layout->addLayout(btnRow);
+    layout->addStretch();
+
+    statusBar()->setStyleSheet("background-color: #181825; color: #a6adc8; border-top: 1px solid #313244;");
+    applyStyle();
+    loadConfig();
+    loadProfiles();
     }
 
 private slots:
+    void loadProfiles() {
+        profileCombo->clear();
+        QProcess p;
+        p.start("powerprofilesctl", {"list"});
+        p.waitForFinished(3000);
+        QString out = p.readAllStandardOutput();
+        // Parse lines like "performance:*" or "  balanced:  "
+        QRegularExpression re(R"(^\s*(\S+):)", QRegularExpression::MultilineOption);
+        auto it = re.globalMatch(out);
+        while (it.hasNext()) {
+            auto m = it.next();
+            QString name = m.captured(1);
+            bool active = out.contains(name + ":*");
+            profileCombo->addItem(name, active);
+        }
+        if (profileCombo->count() == 0) {
+            profileCombo->addItem("power-profiles-daemon not available");
+        }
+    }
+
+    void applyProfile() {
+        QString profile = profileCombo->currentText();
+        if (profile.isEmpty() || profile.contains("not available")) return;
+        QProcess p;
+        p.start("powerprofilesctl", {"set", profile});
+        p.waitForFinished(3000);
+        if (p.exitCode() == 0) {
+            statusBar()->showMessage("Power profile set to: " + profile);
+        } else {
+            statusBar()->showMessage("Failed to set profile: " + p.readAllStandardError().trimmed());
+        }
+        loadProfiles();
+    }
+
     void loadConfig() {
         QString configPath = QDir::homePath() + "/.config/labwc/rc.xml";
         QFile file(configPath);
@@ -174,6 +237,7 @@ private:
     QSpinBox *timeoutSpin;
     QSpinBox *lockSpin;
     QComboBox *lidCombo;
+    QComboBox *profileCombo;
 };
 
 int main(int argc, char *argv[]) {

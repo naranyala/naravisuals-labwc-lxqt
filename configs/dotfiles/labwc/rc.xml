@@ -205,7 +205,7 @@
     <keybind key="C-W-Left">
       <action name="SnapToRegion" region="left" />
     </keybind>
-    <keybind key="W-Right">
+    <keybind key="C-W-Right">
       <action name="SnapToRegion" region="right" />
     </keybind>
     <keybind key="C-W-Up">
@@ -233,13 +233,13 @@
       <action name="MoveToEdge" direction="down" />
     </keybind>
     <keybind key="Print">
-      <action name="Execute" command="grimshot copy screen" />
+      <action name="Execute" command="flameshot gui" />
     </keybind>
     <keybind key="S-Print">
-      <action name="Execute" command="grimshot copy area" />
+      <action name="Execute" command="flameshot gui --delay 3000" />
     </keybind>
     <keybind key="C-Print">
-      <action name="Execute" command="grimshot save screen ~/Pictures/Screenshots/$(date +%Y%m%d-%H%M%S).png" />
+      <action name="Execute" command="flameshot full --path ~/Pictures/Screenshots" />
     </keybind>
     <keybind key="XF86AudioRaiseVolume">
       <action name="Execute" command="pactl set-sink-volume @DEFAULT_SINK@ +5%" />
@@ -267,6 +267,12 @@
     </keybind>
     <keybind key="W-F12">
       <action name="Execute" command="swaylock -f -c 1e1e1e" />
+    </keybind>
+    <keybind key="W-F10">
+      <action name="Execute" command="bash ~/.config/labwc/toggle-redshift.sh" />
+    </keybind>
+    <keybind key="W-F11">
+      <action name="Execute" command="redshift -x && redshift -m manual -t 6500:6500" />
     </keybind>
   </keyboard>
 
@@ -389,6 +395,14 @@
       <scrollMethod>two-finger</scrollMethod>
       <clickMethod>clickfinger</clickMethod>
       <sendEventsMode>enabled</sendEventsMode>
+    </device>
+    <device category="touchpad">
+      <naturalScroll>true</naturalScroll>
+      <tap>true</tap>
+      <tapButtonMap>lrm</tapButtonMap>
+      <disableWhileTyping>true</disableWhileTyping>
+      <scrollMethod>two-finger</scrollMethod>
+      <clickMethod>clickfinger</clickMethod>
     </device>
   </libinput>
 

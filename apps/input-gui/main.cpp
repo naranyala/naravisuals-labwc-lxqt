@@ -13,6 +13,7 @@
 #include <QSlider>
 #include <QScrollArea>
 #include <QFrame>
+#include <QInputDialog>
 
 struct InputDevice {
     QString name;
@@ -104,10 +105,8 @@ private slots:
                 if (t.startsWith("/dev/input")) dev.node = t.trimmed();
             }
 
-            if (dev.type == "pointer" || dev.type == "keyboard") {
-                auto *card = createDeviceCard(dev);
-                contentLayout->addWidget(card);
-            }
+            auto *card = createDeviceCard(dev);
+            contentLayout->addWidget(card);
         }
         contentLayout->addStretch();
         statusBar()->showMessage("Scanned input devices");
@@ -131,7 +130,6 @@ private:
         layout->addWidget(nodeLabel);
 
         if (dev.type == "pointer") {
-            // Natural scroll
             auto *natScroll = new QCheckBox("Natural Scrolling");
             natScroll->setStyleSheet("QCheckBox { color: #cdd6f4; }");
             connect(natScroll, &QCheckBox::toggled, this, [this, dev](bool on) {
@@ -139,7 +137,6 @@ private:
             });
             layout->addWidget(natScroll);
 
-            // Pointer speed
             auto *speedRow = new QHBoxLayout();
             auto *speedLabel = new QLabel("Speed:");
             speedLabel->setStyleSheet("color: #a6adc8;");
@@ -154,6 +151,41 @@ private:
             );
             speedRow->addWidget(speedSlider, 1);
             layout->addLayout(speedRow);
+        } else if (dev.type == "tablet" || dev.type == "touch") {
+            auto *mapBtn = new QPushButton("Map to output...");
+            mapBtn->setStyleSheet(
+                "QPushButton { background-color: #89b4fa; color: #1e1e2e; border-radius: 6px; "
+                "padding: 8px; font-weight: bold; border: none; }"
+            );
+            connect(mapBtn, &QPushButton::clicked, this, [this, dev]() {
+                // Get available outputs via wlr-randr or kscreen
+                QProcess p;
+                p.start("wlr-randr", {"--dry-run"});
+                p.waitForFinished(2000);
+                QString out = p.readAllStandardOutput();
+                // Try simpler approach: prompt user for output name
+                bool ok;
+                QString output = QInputDialog::getText(nullptr, "Map Touch/Tablet",
+                    "Output name (e.g. eDP-1, HDMI-A-1):\n"
+                    "Run 'wlr-randr' in terminal to list available outputs.",
+                    QLineEdit::Normal, "", &ok);
+                if (ok && !output.isEmpty()) {
+                    QProcess::startDetached("wlr-randr", {"--output", output, "--pos", "0,0"});
+                    QProcess::startDetached("libinput", {"set-output", dev.node, output});
+                }
+            });
+            layout->addWidget(mapBtn);
+
+            auto *calBtn = new QPushButton("Calibrate");
+            calBtn->setStyleSheet(
+                "QPushButton { background-color: #a6e3a1; color: #1e1e2e; border-radius: 6px; "
+                "padding: 8px; font-weight: bold; border: none; }"
+            );
+            connect(calBtn, &QPushButton::clicked, this, [this, dev]() {
+                // Launch libinput measure touchpad for calibration
+                QProcess::startDetached("libinput", {"debug-gui", "--device", dev.node});
+            });
+            layout->addWidget(calBtn);
         }
 
         return card;

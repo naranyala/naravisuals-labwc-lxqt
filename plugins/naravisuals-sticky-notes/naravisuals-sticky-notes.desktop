@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=X-PanelPlugin
+Name=Sticky Notes
+Comment=Sticky note widget on the panel
+Icon=text-editor
+X-LXQt-Plugin-Type=desktoppanel
+X-LXQt-PluginLibrary=naravisuals-sticky-notes
+X-LXQt-PluginFor=lxqt-panel

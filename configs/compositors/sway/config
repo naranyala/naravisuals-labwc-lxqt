@@ -47,7 +47,7 @@ exec lxqt-notificationd
 exec lxqt-powermanagement
 exec lxqt-policykit-agent
 
-exec swaybg -i ~/.local/share/wallpapers/origami-dark-labwc.png -m fill
+exec sh -c 'W=$(cat ~/.config/labwc/wallpaper 2>/dev/null); [ -f "$W" ] && exec swaybg -i "$W" -m fill || exec swaybg -i /usr/share/backgrounds/warty-final-ubuntu.png -m fill'
 exec dunst
 exec nm-applet
 exec blueman-applet
