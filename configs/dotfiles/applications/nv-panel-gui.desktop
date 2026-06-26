@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=NaraVisuals Panel Manager
+Comment=Manage LXQt panel widgets, order, and settings
+Exec=nv-panel-gui
+Icon=configure
+Terminal=false
+Categories=Qt;System;Settings;
+Keywords=panel;widget;lxqt;configure;

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NaraVisuals Dock Manager
+Comment=Manage Crystal Dock pinned launchers
+Exec=run_dock_gui.sh
+Icon=crystal-dock
+Terminal=false
+Categories=System;

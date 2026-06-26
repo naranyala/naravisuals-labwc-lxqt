@@ -51,6 +51,15 @@ public:
         mainLayout->setSpacing(8);
         mainLayout->setContentsMargins(12, 12, 12, 12);
 
+        auto *targetRow = new QHBoxLayout();
+        auto *targetLabel = new QLabel("Configuration Target:");
+        m_targetCombo = new QComboBox();
+        m_targetCombo->addItem("LXQt Panel Quicklaunch");
+        m_targetCombo->addItem("Crystal Dock Pinned Apps");
+        targetRow->addWidget(targetLabel);
+        targetRow->addWidget(m_targetCombo, 1);
+        mainLayout->addLayout(targetRow);
+
         m_tabs = new QTabWidget();
         mainLayout->addWidget(m_tabs);
 
@@ -120,10 +129,10 @@ public:
         btnLayout->addWidget(btnSelectAll);
         auto *btnDeselectAll = new QPushButton("Deselect All");
         btnLayout->addWidget(btnDeselectAll);
-        auto *btnApply = new QPushButton("Apply to Panel");
-        btnLayout->addWidget(btnApply);
-        auto *btnRestart = new QPushButton("Restart Panel");
-        btnLayout->addWidget(btnRestart);
+        m_btnApply = new QPushButton("Apply to Panel");
+        btnLayout->addWidget(m_btnApply);
+        m_btnRestart = new QPushButton("Restart Panel");
+        btnLayout->addWidget(m_btnRestart);
         mainLayout->addLayout(btnLayout);
 
         statusBar()->showMessage("Ready");
@@ -140,13 +149,26 @@ public:
         connect(btnBrowse, &QPushButton::clicked, this, &LauncherGui::browseBinary);
         connect(btnSelectAll, &QPushButton::clicked, this, &LauncherGui::selectAll);
         connect(btnDeselectAll, &QPushButton::clicked, this, &LauncherGui::deselectAll);
-        connect(btnApply, &QPushButton::clicked, this, &LauncherGui::applyToPanel);
-        connect(btnRestart, &QPushButton::clicked, this, &LauncherGui::restartPanel);
+        connect(m_targetCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+            loadCurrentSelection();
+            if (index == 0) {
+                m_btnApply->setText("Apply to Panel");
+                m_btnRestart->setText("Restart Panel");
+            } else {
+                m_btnApply->setText("Apply to Dock");
+                m_btnRestart->setText("Restart Dock");
+            }
+        });
+        connect(m_btnApply, &QPushButton::clicked, this, &LauncherGui::applyToPanel);
+        connect(m_btnRestart, &QPushButton::clicked, this, &LauncherGui::restartPanel);
         connect(m_appList, &QListWidget::itemSelectionChanged, this, &LauncherGui::updateSelectedCount);
         connect(m_binList, &QListWidget::itemSelectionChanged, this, &LauncherGui::updateBinSelectedCount);
     }
 
 private:
+    QComboBox *m_targetCombo;
+    QPushButton *m_btnApply;
+    QPushButton *m_btnRestart;
     QTabWidget *m_tabs;
     QListWidget *m_appList;
     QListWidget *m_binList;
@@ -168,6 +190,17 @@ private:
             return path;
         QString xdgConfig = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
         return xdgConfig + "/lxqt/panel.conf";
+    }
+
+    QString crystalDockConfPath() {
+        QString xdgConfig = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+        QString path = xdgConfig + "/crystal-dock/LXQt/panel_1.conf";
+        if (QFile::exists(path))
+            return path;
+        path = xdgConfig + "/crystal-dock/Budgie/panel_1.conf";
+        if (QFile::exists(path))
+            return path;
+        return xdgConfig + "/crystal-dock/panel_1.conf";
     }
 
     void scanDesktopDir(const QString &dirPath) {
@@ -261,42 +294,69 @@ private:
 
     void loadCurrentSelection() {
         m_currentSelection.clear();
-        QString confPath = panelConfPath();
-        if (!QFile::exists(confPath))
-            return;
 
-        QFile file(confPath);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-            return;
+        if (m_targetCombo->currentIndex() == 0) {
+            // LXQt Panel
+            QString confPath = panelConfPath();
+            if (QFile::exists(confPath)) {
+                QFile file(confPath);
+                if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    bool inQuicklaunch = false;
+                    QTextStream in(&file);
+                    while (!in.atEnd()) {
+                        QString line = in.readLine().trimmed();
+                        if (line == "[quicklaunch]") {
+                            inQuicklaunch = true;
+                            continue;
+                        }
+                        if (line.startsWith('[') && line.endsWith(']')) {
+                            inQuicklaunch = false;
+                            continue;
+                        }
+                        if (!inQuicklaunch)
+                            continue;
 
-        bool inQuicklaunch = false;
-        QTextStream in(&file);
-        while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
-            if (line == "[quicklaunch]") {
-                inQuicklaunch = true;
-                continue;
+                        if (line.startsWith("apps=")) {
+                            const auto apps = line.mid(5).split(',', Qt::SkipEmptyParts);
+                            for (const QString &a : apps)
+                                m_currentSelection.insert(a.trimmed());
+                        }
+                    }
+                    file.close();
+                }
             }
-            if (line.startsWith('[') && line.endsWith(']')) {
-                inQuicklaunch = false;
-                continue;
-            }
-            if (!inQuicklaunch)
-                continue;
-
-            if (line.startsWith("apps=")) {
-                const auto apps = line.mid(5).split(',', Qt::SkipEmptyParts);
-                for (const QString &a : apps)
-                    m_currentSelection.insert(a.trimmed());
+        } else {
+            // Crystal Dock
+            QString confPath = crystalDockConfPath();
+            if (QFile::exists(confPath)) {
+                QFile file(confPath);
+                if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    QTextStream in(&file);
+                    while (!in.atEnd()) {
+                        QString line = in.readLine().trimmed();
+                        if (line.startsWith("launchers=")) {
+                            QString val = line.mid(10).trimmed();
+                            if (val.startsWith('"') && val.endsWith('"')) {
+                                val = val.mid(1, val.length() - 2);
+                            }
+                            const auto apps = val.split(';', Qt::SkipEmptyParts);
+                            for (const QString &a : apps) {
+                                if (a != "separator")
+                                    m_currentSelection.insert(a.trimmed());
+                            }
+                        }
+                    }
+                    file.close();
+                }
             }
         }
-        file.close();
 
+        m_appList->blockSignals(true);
         for (int i = 0; i < m_appList->count(); ++i) {
             auto *item = m_appList->item(i);
-            if (m_currentSelection.contains(item->data(Qt::UserRole).toString()))
-                item->setSelected(true);
+            item->setSelected(m_currentSelection.contains(item->data(Qt::UserRole).toString()));
         }
+        m_appList->blockSignals(false);
         updateSelectedCount();
     }
 
@@ -505,88 +565,177 @@ private:
     }
 
     void applyToPanel() {
-        QString confPath = panelConfPath();
-        if (!QFile::exists(confPath)) {
-            QMessageBox::warning(this, "Error", "panel.conf not found:\n" + confPath);
-            return;
-        }
-
-        QFile file(confPath);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QMessageBox::warning(this, "Error", "Cannot read panel.conf");
-            return;
-        }
-
-        QStringList lines;
-        QTextStream in(&file);
-        while (!in.atEnd())
-            lines.append(in.readLine());
-        file.close();
-
-        bool inQuicklaunch = false;
-        bool appsWritten = false;
-        QStringList newLines;
-        QStringList selected = selectedBasenames();
-        QString appsValue = selected.join(',');
-
-        for (int i = 0; i < lines.size(); ++i) {
-            QString line = lines[i].trimmed();
-
-            if (line == "[quicklaunch]") {
-                inQuicklaunch = true;
-                newLines.append(lines[i]);
-                continue;
+        if (m_targetCombo->currentIndex() == 0) {
+            // LXQt Panel
+            QString confPath = panelConfPath();
+            if (!QFile::exists(confPath)) {
+                QMessageBox::warning(this, "Error", "panel.conf not found:\n" + confPath);
+                return;
             }
-            if (line.startsWith('[') && line.endsWith(']')) {
-                if (inQuicklaunch && !appsWritten) {
+
+            QFile file(confPath);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QMessageBox::warning(this, "Error", "Cannot read panel.conf");
+                return;
+            }
+
+            QStringList lines;
+            QTextStream in(&file);
+            while (!in.atEnd())
+                lines.append(in.readLine());
+            file.close();
+
+            bool inQuicklaunch = false;
+            bool appsWritten = false;
+            QStringList newLines;
+            QStringList selected = selectedBasenames();
+            QString appsValue = selected.join(',');
+
+            for (int i = 0; i < lines.size(); ++i) {
+                QString line = lines[i].trimmed();
+
+                if (line == "[quicklaunch]") {
+                    inQuicklaunch = true;
+                    newLines.append(lines[i]);
+                    continue;
+                }
+                if (line.startsWith('[') && line.endsWith(']')) {
+                    if (inQuicklaunch && !appsWritten) {
+                        newLines.append("apps=" + appsValue);
+                        appsWritten = true;
+                    }
+                    inQuicklaunch = false;
+                    newLines.append(lines[i]);
+                    continue;
+                }
+
+                if (inQuicklaunch && line.startsWith("apps=")) {
                     newLines.append("apps=" + appsValue);
                     appsWritten = true;
+                    continue;
                 }
-                inQuicklaunch = false;
+
                 newLines.append(lines[i]);
-                continue;
             }
 
-            if (inQuicklaunch && line.startsWith("apps=")) {
+            if (inQuicklaunch && !appsWritten)
                 newLines.append("apps=" + appsValue);
-                appsWritten = true;
-                continue;
+
+            if (!QFile::exists(confPath + ".bak"))
+                QFile::copy(confPath, confPath + ".bak");
+
+            QFile outFile(confPath);
+            if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+                QMessageBox::warning(this, "Error", "Cannot write panel.conf");
+                return;
+            }
+            QTextStream out(&outFile);
+            for (const QString &line : newLines)
+                out << line << "\n";
+            outFile.close();
+
+            m_currentSelection.clear();
+            for (const QString &s : selected)
+                m_currentSelection.insert(s);
+
+            statusBar()->showMessage(QString("Applied %1 apps to panel quicklaunch").arg(selected.size()));
+            QMessageBox::information(this, "Applied",
+                QString("%1 apps saved to panel.conf.\nClick 'Restart Panel' to apply.").arg(selected.size()));
+        } else {
+            // Crystal Dock
+            QString confPath = crystalDockConfPath();
+            if (!QFile::exists(confPath)) {
+                QMessageBox::warning(this, "Error", "Crystal Dock panel_1.conf not found:\n" + confPath);
+                return;
             }
 
-            newLines.append(lines[i]);
+            QFile file(confPath);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QMessageBox::warning(this, "Error", "Cannot read Crystal Dock panel_1.conf");
+                return;
+            }
+
+            QStringList lines;
+            QTextStream in(&file);
+            while (!in.atEnd())
+                lines.append(in.readLine());
+            file.close();
+
+            QStringList newLines;
+            QStringList selected = selectedBasenames();
+
+            // Count separators in original config and append them
+            int separatorCount = 0;
+            for (const QString &line : lines) {
+                if (line.trimmed().startsWith("launchers=")) {
+                    QString val = line.trimmed().mid(10).trimmed();
+                    if (val.startsWith('"') && val.endsWith('"')) val = val.mid(1, val.length() - 2);
+                    for (const QString &a : val.split(';', Qt::SkipEmptyParts)) {
+                        if (a.trimmed() == "separator") separatorCount++;
+                    }
+                }
+            }
+
+            for (int i = 0; i < separatorCount; ++i) {
+                selected.append("separator");
+            }
+
+            QString launchersValue = "\"" + selected.join(';') + "\"";
+            bool launchersWritten = false;
+
+            for (int i = 0; i < lines.size(); ++i) {
+                QString line = lines[i].trimmed();
+                if (line.startsWith("launchers=")) {
+                    newLines.append("launchers=" + launchersValue);
+                    launchersWritten = true;
+                    continue;
+                }
+                newLines.append(lines[i]);
+            }
+
+            if (!launchersWritten) {
+                newLines.append("launchers=" + launchersValue);
+            }
+
+            if (!QFile::exists(confPath + ".bak"))
+                QFile::copy(confPath, confPath + ".bak");
+
+            QFile outFile(confPath);
+            if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+                QMessageBox::warning(this, "Error", "Cannot write Crystal Dock panel_1.conf");
+                return;
+            }
+            QTextStream out(&outFile);
+            for (const QString &line : newLines)
+                out << line << "\n";
+            outFile.close();
+
+            m_currentSelection.clear();
+            for (const QString &s : selected) {
+                if (s != "separator")
+                    m_currentSelection.insert(s);
+            }
+
+            statusBar()->showMessage(QString("Applied %1 apps to Crystal Dock").arg(selected.size() - separatorCount));
+            QMessageBox::information(this, "Applied",
+                QString("%1 apps saved to Crystal Dock config.\nClick 'Restart Dock' to apply.").arg(selected.size() - separatorCount));
         }
-
-        if (inQuicklaunch && !appsWritten)
-            newLines.append("apps=" + appsValue);
-
-        if (!QFile::exists(confPath + ".bak"))
-            QFile::copy(confPath, confPath + ".bak");
-
-        QFile outFile(confPath);
-        if (!outFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-            QMessageBox::warning(this, "Error", "Cannot write panel.conf");
-            return;
-        }
-        QTextStream out(&outFile);
-        for (const QString &line : newLines)
-            out << line << "\n";
-        outFile.close();
-
-        m_currentSelection.clear();
-        for (const QString &s : selected)
-            m_currentSelection.insert(s);
-
-        statusBar()->showMessage(QString("Applied %1 apps to panel quicklaunch").arg(selected.size()));
-        QMessageBox::information(this, "Applied",
-            QString("%1 apps saved to panel.conf.\nClick 'Restart Panel' to apply.").arg(selected.size()));
     }
 
     void restartPanel() {
-        QProcess::startDetached("pkill", QStringList() << "lxqt-panel");
-        QTimer::singleShot(500, this, []() {
-            QProcess::startDetached("lxqt-panel");
-        });
-        statusBar()->showMessage("Panel restarted");
+        if (m_targetCombo->currentIndex() == 0) {
+            QProcess::startDetached("pkill", QStringList() << "lxqt-panel");
+            QTimer::singleShot(500, this, []() {
+                QProcess::startDetached("lxqt-panel");
+            });
+            statusBar()->showMessage("Panel restarted");
+        } else {
+            QProcess::startDetached("pkill", QStringList() << "crystal-dock");
+            QTimer::singleShot(500, this, []() {
+                QProcess::startDetached("crystal-dock");
+            });
+            statusBar()->showMessage("Crystal Dock restarted");
+        }
     }
 
     void applyStyle() {

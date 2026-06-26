@@ -33,6 +33,7 @@ CONFIGS=(
   "$HOME/.config/labwc/rc.xml|Labwc keybinds|compositor"
   "$HOME/.config/labwc/environment|Labwc environment|compositor"
   "$HOME/.config/labwc/autostart|Labwc autostart|compositor"
+  "$HOME/.config/autostart/lxqt-panel.desktop|XDG autostart (lxqt-panel)|compositor"
 
   # Other compositors
   "$HOME/.config/hypr/*|Hyprland config|compositor"

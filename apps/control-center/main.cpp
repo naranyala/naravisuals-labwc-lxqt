@@ -230,6 +230,28 @@ public:
 
         layout->addWidget(diskGroup);
 
+        auto *defGroup = new QGroupBox("Default Applications");
+        auto *defLayout = new QVBoxLayout(defGroup);
+        defLayout->setSpacing(10);
+
+        auto *defLabel = new QLabel("Manage default applications for web browsing, text editing, media playback, and file management.");
+        defLabel->setWordWrap(true);
+        defLabel->setStyleSheet("color: #a6adc8; font-size: 13px;");
+        defLayout->addWidget(defLabel);
+
+        auto *defBtn = new QPushButton("Configure Default Apps");
+        connect(defBtn, &QPushButton::clicked, [](){
+            QString path = WORKSPACE_DIR + "/apps/default-apps-gui/build/nv-default-apps-gui";
+            if (QFile::exists(path)) {
+                QProcess::startDetached(path);
+            } else {
+                QMessageBox::warning(nullptr, "Error", "Default Apps GUI not built. Run: cd apps/default-apps-gui/build && ninja");
+            }
+        });
+        defLayout->addWidget(defBtn);
+
+        layout->addWidget(defGroup);
+
         auto *updateGroup = new QGroupBox("System Maintenance");
         auto *uLayout = new QVBoxLayout(updateGroup);
         auto *updatePanelBtn = new QPushButton("Update LXQt Panel from Source");

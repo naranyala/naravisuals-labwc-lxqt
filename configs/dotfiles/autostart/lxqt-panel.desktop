@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=LXQt Panel
+Comment=LXQt desktop panel
+Exec=lxqt-panel
+OnlyShowIn=LXQt;
+AutostartCondition=if [ "$XDG_SESSION_DESKTOP" = "lxqt-labwc" ] || [ "$XDG_CURRENT_DESKTOP" = *"LXQt"* ]; then true; fi
+X-GNOME-Autostart-Phase=Applications
+X-LXQt-autostart-phase=Applications
+NoDisplay=true

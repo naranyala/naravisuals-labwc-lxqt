@@ -213,6 +213,9 @@ check_file "$HOME_DIR/.config/labwc/rc.xml" "Labwc keybindings" \
 check_file "$HOME_DIR/.config/labwc/autostart" "Labwc autostart" \
     "Run: bash install.sh --minimal"
 
+check_file "$HOME_DIR/.config/autostart/lxqt-panel.desktop" "XDG autostart (lxqt-panel)" \
+    "Run: bash install.sh --minimal"
+
 check_file "$HOME_DIR/.config/labwc/environment" "Labwc environment" \
     "Run: bash install.sh --minimal"
 

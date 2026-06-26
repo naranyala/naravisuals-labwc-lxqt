@@ -3,28 +3,11 @@
 # LXQt Labwc Session - Autostart
 # ================================
 # This script runs at labwc startup after the environment is loaded.
+# Order matters: infrastructure first, then panel, then services.
 
-# ---- Screenshot daemon (flameshot) ----
-if command -v flameshot &>/dev/null; then
-  flameshot daemon &
-fi
+# ---- Phase 1: Core infrastructure ----
 
-# ---- Night light (redshift) ----
-if command -v redshift &>/dev/null; then
-  redshift &
-fi
-
-# ---- LXQt Panel ----
-if command -v lxqt-panel &>/dev/null; then
-  lxqt-panel &
-fi
-
-# ---- Dock (task manager) ----
-if command -v crystal-dock &>/dev/null; then
-  crystal-dock &
-fi
-
-# ---- Wallpaper (read from config, fallback to default) ----
+# Wallpaper (set immediately so desktop is not blank)
 if command -v swaybg &>/dev/null; then
   WALLPAPER_FALLBACK="/usr/share/backgrounds/cnusr25-Simple_Raccoon_Dark.png"
   if [ -f "$HOME/.config/labwc/wallpaper" ]; then
@@ -36,44 +19,7 @@ if command -v swaybg &>/dev/null; then
   swaybg -i "$WALLPAPER" -m fill &
 fi
 
-# ---- Notification daemon ----
-if command -v dunst &>/dev/null; then
-  dunst &
-elif command -v lxqt-notificationd &>/dev/null; then
-  lxqt-notificationd &
-fi
-
-# ---- LXQt PolicyKit agent ----
-if command -v lxqt-policykit-agent &>/dev/null; then
-  lxqt-policykit-agent &
-fi
-
-# ---- Clipboard manager (Wayland native) ----
-if command -v cliphist &>/dev/null && command -v wl-paste &>/dev/null; then
-  wl-paste --type text --watch cliphist store &
-  wl-paste --type image --watch cliphist store &
-fi
-
-# ---- Screen idle / power management ----
-if command -v swayidle &>/dev/null; then
-  swayidle -w \
-    timeout 300 'if command -v wlopm &>/dev/null; then wlopm --off \*; fi' \
-    resume 'if command -v wlopm &>/dev/null; then wlopm --on \*; fi' \
-    timeout 600 'swaylock -f' \
-    before-sleep 'swaylock -f' &
-fi
-
-# ---- Network manager applet ----
-if command -v nm-applet &>/dev/null; then
-  nm-applet --indicator &
-fi
-
-# ---- Bluetooth tray ----
-if command -v blueman-applet &>/dev/null; then
-  blueman-applet &
-fi
-
-# ---- Wayland portals (order matters: wlroots before lxqt) ----
+# Wayland portals (order matters: wlroots before lxqt before main portal)
 if command -v xdg-desktop-portal-wlr &>/dev/null; then
   /usr/libexec/xdg-desktop-portal-wlr &
 fi
@@ -84,7 +30,68 @@ if command -v xdg-desktop-portal &>/dev/null; then
   /usr/libexec/xdg-desktop-portal &
 fi
 
-# ---- Auto-mount removable media ----
+# LXQt PolicyKit agent (needed for privileged ops)
+if command -v lxqt-policykit-agent &>/dev/null; then
+  lxqt-policykit-agent &
+fi
+
+# Notification daemon
+if command -v dunst &>/dev/null; then
+  dunst &
+elif command -v lxqt-notificationd &>/dev/null; then
+  lxqt-notificationd &
+fi
+
+# LXQt Panel (start early)
+if command -v lxqt-panel &>/dev/null; then
+  lxqt-panel &
+fi
+
+# ---- Phase 2: Tray apps & daemons ----
+
+# Clipboard manager (Wayland native)
+if command -v cliphist &>/dev/null && command -v wl-paste &>/dev/null; then
+  wl-paste --type text --watch cliphist store &
+  wl-paste --type image --watch cliphist store &
+fi
+
+# Network manager applet
+if command -v nm-applet &>/dev/null; then
+  nm-applet --indicator &
+fi
+
+# Bluetooth tray
+if command -v blueman-applet &>/dev/null; then
+  blueman-applet &
+fi
+
+# Screenshot daemon (flameshot)
+if command -v flameshot &>/dev/null; then
+  flameshot daemon &
+fi
+
+# Night light (redshift)
+if command -v redshift &>/dev/null; then
+  redshift &
+fi
+
+# Screen idle / power management
+if command -v swayidle &>/dev/null; then
+  swayidle -w \
+    timeout 300 'if command -v wlopm &>/dev/null; then wlopm --off \*; fi' \
+    resume 'if command -v wlopm &>/dev/null; then wlopm --on \*; fi' \
+    timeout 600 'swaylock -f' \
+    before-sleep 'swaylock -f' &
+fi
+
+# Auto-mount removable media
 if command -v lxqt-pcmanfm-automount &>/dev/null; then
   lxqt-pcmanfm-automount &
+fi
+
+# ---- Phase 3: Dock (task manager) ----
+
+# Dock (task manager) — also delayed slightly so it doesn't race with panel
+if command -v crystal-dock &>/dev/null; then
+  (sleep 1.5 && crystal-dock) &
 fi

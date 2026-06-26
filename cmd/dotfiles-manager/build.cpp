@@ -45,6 +45,7 @@ std::vector<Dotfile> manifest = {
     {"configs/dotfiles/xdg-desktop-portal-wlr/config", ".config/xdg-desktop-portal-wlr/config"},
     {"configs/dotfiles/lxqt/lxqt-panel.qss", ".config/lxqt/lxqt-panel.qss"},
     {"configs/dotfiles/lxqt/panel-stock.conf", ".config/lxqt/panel-stock.conf"},
+    {"configs/dotfiles/autostart/lxqt-panel.desktop", ".config/autostart/lxqt-panel.desktop"},
     {"configs/dotfiles/emacs/init.el", ".config/emacs/init.el"},
     {"configs/compositors/hyprland/hyprland.conf", ".config/hypr/hyprland.conf"},
     {"configs/compositors/sway/config", ".config/sway/config"},
